@@ -19,6 +19,7 @@ package org.springframework.core.annotation;
 import java.lang.annotation.Annotation;
 
 /**
+ * 注解选择器
  * Strategy interface used to select between two {@link MergedAnnotation}
  * instances.
  *
@@ -31,6 +32,7 @@ import java.lang.annotation.Annotation;
 public interface MergedAnnotationSelector<A extends Annotation> {
 
 	/**
+	 * 是否为最合适的注解
 	 * Determine if the existing annotation is known to be the best
 	 * candidate and any subsequent selections may be skipped.
 	 * @param annotation the annotation to check
@@ -41,6 +43,7 @@ public interface MergedAnnotationSelector<A extends Annotation> {
 	}
 
 	/**
+	 * 选择合适的注解
 	 * Select the annotation that should be used.
 	 * @param existing an existing annotation returned from an earlier result
 	 * @param candidate a candidate annotation that may be better suited

@@ -28,6 +28,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
+ * 用于封装多个不同的注解
  * A single merged annotation returned from a {@link MergedAnnotations}
  * collection. Presents a view onto an annotation where attribute values may
  * have been "merged" from different source values.
@@ -63,13 +64,14 @@ public interface MergedAnnotation<A extends Annotation> {
 
 
 	/**
-	 * 获取注解的Class类型
+	 * 获取注解的类型
 	 * Get the {@code Class} reference for the actual annotation type.
 	 * @return the annotation type
 	 */
 	Class<A> getType();
 
 	/**
+	 * 是否应用
 	 * Determine if the annotation is present on the source. Considers
 	 * {@linkplain #isDirectlyPresent() directly present} and
 	 * {@linkplain #isMetaPresent() meta-present} annotations within the context
@@ -79,6 +81,7 @@ public interface MergedAnnotation<A extends Annotation> {
 	boolean isPresent();
 
 	/**
+	 * 是否直接应用
 	 * Determine if the annotation is directly present on the source.
 	 * <p>A directly present annotation is one that the user has explicitly
 	 * declared and not one that is {@linkplain #isMetaPresent() meta-present}
@@ -88,6 +91,7 @@ public interface MergedAnnotation<A extends Annotation> {
 	boolean isDirectlyPresent();
 
 	/**
+	 * 是否元注解应用
 	 * Determine if the annotation is meta-present on the source.
 	 * <p>A meta-present annotation is an annotation that the user hasn't
 	 * explicitly declared, but has been used as a meta-annotation somewhere in
@@ -97,6 +101,11 @@ public interface MergedAnnotation<A extends Annotation> {
 	boolean isMetaPresent();
 
 	/**
+	 * 返回注解的距离：
+	 * -1 没有应用
+	 * 0 直接应用
+	 * 1 元注解应用
+	 * 2 元注解的元注解应用
 	 * Get the distance of this annotation related to its use as a
 	 * meta-annotation.
 	 * <p>A directly declared annotation has a distance of {@code 0}, a

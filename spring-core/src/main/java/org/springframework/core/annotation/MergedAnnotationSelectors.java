@@ -60,6 +60,7 @@ public abstract class MergedAnnotationSelectors {
 
 
 	/**
+	 * 选择距离最近的策略
 	 * {@link MergedAnnotationSelector} to select the nearest annotation.
 	 */
 	private static class Nearest implements MergedAnnotationSelector<Annotation> {
@@ -83,6 +84,7 @@ public abstract class MergedAnnotationSelectors {
 
 
 	/**
+	 * 选择第一个直接注解的
 	 * {@link MergedAnnotationSelector} to select the first directly declared
 	 * annotation.
 	 */

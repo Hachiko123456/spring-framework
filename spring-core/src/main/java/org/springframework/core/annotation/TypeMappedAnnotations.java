@@ -287,6 +287,7 @@ final class TypeMappedAnnotations implements MergedAnnotations {
 			SHARED = new IsPresent[4];
 			SHARED[0] = new IsPresent(RepeatableContainers.none(), AnnotationFilter.PLAIN, true);
 			SHARED[1] = new IsPresent(RepeatableContainers.none(), AnnotationFilter.PLAIN, false);
+			// 用于@Repeatable注解
 			SHARED[2] = new IsPresent(RepeatableContainers.standardRepeatables(), AnnotationFilter.PLAIN, true);
 			SHARED[3] = new IsPresent(RepeatableContainers.standardRepeatables(), AnnotationFilter.PLAIN, false);
 		}
@@ -359,6 +360,7 @@ final class TypeMappedAnnotations implements MergedAnnotations {
 
 
 	/**
+	 * 找到一个MergeAnnotation
 	 * {@link AnnotationsProcessor} that finds a single {@link MergedAnnotation}.
 	 */
 	private class MergedAnnotationFinder<A extends Annotation>
@@ -408,6 +410,7 @@ final class TypeMappedAnnotations implements MergedAnnotations {
 		private MergedAnnotation<A> process(
 				Object type, int aggregateIndex, @Nullable Object source, Annotation annotation) {
 
+			// 找到可重复注解实例
 			Annotation[] repeatedAnnotations = repeatableContainers.findRepeatedAnnotations(annotation);
 			if (repeatedAnnotations != null) {
 				return doWithAnnotations(type, aggregateIndex, source, repeatedAnnotations);

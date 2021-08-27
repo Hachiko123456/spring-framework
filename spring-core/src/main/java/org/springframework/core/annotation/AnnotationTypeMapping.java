@@ -27,6 +27,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 
 /**
+ * 提供一个注解在root注解上下文之间的映射信息
  * Provides mapping information for a single annotation (or meta-annotation) in
  * the context of a root annotation type.
  *
@@ -39,40 +40,84 @@ final class AnnotationTypeMapping {
 
 	private static final MirrorSet[] EMPTY_MIRROR_SETS = new MirrorSet[0];
 
+	/**
+	 * 假设此AnnotationTypeMapping实例为MA，映射的为@A_A注解
+	 */
 
 	@Nullable
+	/**
+	 * 引起此注解被解析的注解。例如：@A_A注解了@A_ROOT,则此属性指向了映射 @A_ROOT的AnnotationTypeMapping实例
+	 */
 	private final AnnotationTypeMapping source;
 
+	/**
+	 * 引起注解被解析的根注解。例如：@A_ROOT是解析的源头
+	 */
 	private final AnnotationTypeMapping root;
 
+	/**
+	 * 离root的距离，@A_A距离@A_ROOT为1
+	 */
 	private final int distance;
 
+	/**
+	 * 此mapping对应的注解类型，此处为A_A
+	 */
 	private final Class<? extends Annotation> annotationType;
 
+	/**
+	 * 设计到的注解类型列表，包括source的metaTypes加上annotationType
+	 */
 	private final List<Class<? extends Annotation>> metaTypes;
 
 	@Nullable
+	/**
+	 * 注解类型实例
+	 */
 	private final Annotation annotation;
 
+	/**
+	 * 注解的属性方法包装类
+	 */
 	private final AttributeMethods attributes;
 
+	/**
+	 *MirrorSet集合
+	 *本注解里声明的属性，最终为同一个属性的 别名 的属性集合为一个MirrorSet
+	 */
 	private final MirrorSets mirrorSets;
 
+	/**
+	 * 每个属性在root中对应的同名的属性方法的索引。与conventionMappings 的区别是，它是同名的属性，不考虑别名。
+	 */
 	private final int[] aliasMappings;
 
+	/**
+	 * 方便访问属性 的映射消息，如果在root中有别名，则优先获取，
+	 */
 	private final int[] conventionMappings;
 
+	/**
+	 * 与annotationValueSource是相匹配的，定义每个属性最终从哪个注解的哪个属性获取值。
+	 */
 	private final int[] annotationValueMappings;
 
+	/**
+	 *
+	 */
 	private final AnnotationTypeMapping[] annotationValueSource;
 
 	/**
-	 * 方法及其别名的映射关系
+	 * 存储每个属性的所有别名属性方法（仅限于本注解定义中的属性方法）
+	 * Key：AliasFor里定义的属性方法，value为本注解内声明的属性方法。resolveAliasedForTargets方法中解析
 	 */
 	private final Map<Method, List<Method>> aliasedBy;
 
 	private final boolean synthesizable;
 
+	/**
+	 * 本注解声明的所有属性方法的所有别名集合。最后用于注解定义检查然后会清空
+	 */
 	private final Set<Method> claimedAliases = new HashSet<>();
 
 
@@ -93,6 +138,7 @@ final class AnnotationTypeMapping {
 		this.conventionMappings = filledIntArray(this.attributes.size());
 		this.annotationValueMappings = filledIntArray(this.attributes.size());
 		this.annotationValueSource = new AnnotationTypeMapping[this.attributes.size()];
+		// 返回每个方法的所有别名(本注解声明的属性方法)
 		this.aliasedBy = resolveAliasedForTargets();
 		processAliases();
 		addConventionMappings();
@@ -119,15 +165,18 @@ final class AnnotationTypeMapping {
 	}
 
 	/**
-	 * 解析方法及其别名，并保存映射关系
+	 * 返回每个属性方法的所有别名
+	 * key：AliasFor里面定义的属性方法，value为本注解内声明的属性方法
 	 * @return
 	 */
 	private Map<Method, List<Method>> resolveAliasedForTargets() {
 		Map<Method, List<Method>> aliasedBy = new HashMap<>();
 		for (int i = 0; i < this.attributes.size(); i++) {
+			// 声明的属性方法
 			Method attribute = this.attributes.get(i);
 			AliasFor aliasFor = AnnotationsScanner.getDeclaredAnnotation(attribute, AliasFor.class);
 			if (aliasFor != null) {
+				// 最终解析的属性方法（作为key）
 				Method target = resolveAliasTarget(attribute, aliasFor);
 				aliasedBy.computeIfAbsent(target, key -> new ArrayList<>()).add(attribute);
 			}
@@ -135,6 +184,12 @@ final class AnnotationTypeMapping {
 		return Collections.unmodifiableMap(aliasedBy);
 	}
 
+	/**
+	 * 解析属性方法AliasFor的Method
+	 * @param attribute
+	 * @param aliasFor
+	 * @return
+	 */
 	private Method resolveAliasTarget(Method attribute, AliasFor aliasFor) {
 		return resolveAliasTarget(attribute, aliasFor, true);
 	}
@@ -147,7 +202,7 @@ final class AnnotationTypeMapping {
 	 * @return
 	 */
 	private Method resolveAliasTarget(Method attribute, AliasFor aliasFor, boolean checkAliasPair) {
-		//只允许定义AliasFor的value或者attribute属性
+		// 不允许同时定义AliasFor的value和attribute方法
 		if (StringUtils.hasText(aliasFor.value()) && StringUtils.hasText(aliasFor.attribute())) {
 			throw new AnnotationConfigurationException(String.format(
 					"In @AliasFor declared on %s, attribute 'attribute' and its alias 'value' " +
@@ -156,20 +211,20 @@ final class AnnotationTypeMapping {
 					aliasFor.value()));
 		}
 		Class<? extends Annotation> targetAnnotation = aliasFor.annotation();
-		//如果是Annotation.class，说明没有指定该属性，则用annotationType
+		// 如果是Annotation.class，说明是在本注解内
 		if (targetAnnotation == Annotation.class) {
 			targetAnnotation = this.annotationType;
 		}
-		//如果没有attribute值，则尝试使用value值取替代
+		// 如果没有attribute值，则尝试使用value值取替代
 		String targetAttributeName = aliasFor.attribute();
 		if (!StringUtils.hasLength(targetAttributeName)) {
 			targetAttributeName = aliasFor.value();
 		}
-		//如果没有定义到AlisaFor的value和attribute值，则用方法名代替
+		// 如果没有定义到AlisaFor的value和attribute值，则用方法名代替
 		if (!StringUtils.hasLength(targetAttributeName)) {
 			targetAttributeName = attribute.getName();
 		}
-		//获取targetAnnotation的targetAttributeName方法
+		// 获取最终的aliased注解的属性方法
 		Method target = AttributeMethods.forAnnotationType(targetAnnotation).get(targetAttributeName);
 		if (target == null) {
 			if (targetAnnotation == this.annotationType) {
@@ -217,13 +272,17 @@ final class AnnotationTypeMapping {
 		return (attributeType == targetType || attributeType == targetType.getComponentType());
 	}
 
+	/**
+	 * 处理别名，生成MirrorSets
+	 */
 	private void processAliases() {
 		List<Method> aliases = new ArrayList<>();
 		for (int i = 0; i < this.attributes.size(); i++) {
 			aliases.clear();
+			// 本属性方法的所有别名先加入
 			aliases.add(this.attributes.get(i));
+			// 再递归收集别名的别名
 			collectAliases(aliases);
-			//如果方法的别名数量多于1个
 			if (aliases.size() > 1) {
 				processAliases(i, aliases);
 			}
@@ -231,7 +290,7 @@ final class AnnotationTypeMapping {
 	}
 
 	/**
-	 * 把当前AnnotationTypeMapping及其父AnnotationTypeMapping的方法别名添加到aliases集合中
+	 * 递归AnnotationTypeMapping链，收集别名，最终解析到此属性方法的所有别名
 	 * @param aliases
 	 */
 	private void collectAliases(List<Method> aliases) {
@@ -248,24 +307,35 @@ final class AnnotationTypeMapping {
 		}
 	}
 
+	/**
+	 * 对每个属性方法，处理它的别名
+	 * @param attributeIndex
+	 * @param aliases 每个属性方法的所有层级的别名
+	 */
 	private void processAliases(int attributeIndex, List<Method> aliases) {
-		//获取root AnnotationTypeMapping包含的方法中第一个在别名列表中出现的方法下标
+		//获取root 声明的第一个别名属性的index，-1表示root不存在此属性方法的别名
 		int rootAttributeIndex = getFirstRootAttributeIndex(aliases);
 		AnnotationTypeMapping mapping = this;
 		while (mapping != null) {
+			// root中有别名，并且此mapping不是root
 			if (rootAttributeIndex != -1 && mapping != this.root) {
 				for (int i = 0; i < mapping.attributes.size(); i++) {
+					// 如果别名中有此属性，则对应的属性index值为root的属性的index
 					if (aliases.contains(mapping.attributes.get(i))) {
 						mapping.aliasMappings[i] = rootAttributeIndex;
 					}
 				}
 			}
+			// 更新mapping的mirrorSets
 			mapping.mirrorSets.updateFrom(aliases);
+			// mapping声明的属性方法的别名集合
 			mapping.claimedAliases.addAll(aliases);
 			if (mapping.annotation != null) {
+				// 返回本mapping每个属性最终取值的属性方法的序号数组
 				int[] resolvedMirrors = mapping.mirrorSets.resolve(null,
 						mapping.annotation, ReflectionUtils::invokeMethod);
 				for (int i = 0; i < mapping.attributes.size(); i++) {
+					// 本属性方法是别名，则设置注解值的最终来源（mppaing和属性序号）
 					if (aliases.contains(mapping.attributes.get(i))) {
 						this.annotationValueMappings[attributeIndex] = resolvedMirrors[i];
 						this.annotationValueSource[attributeIndex] = mapping;

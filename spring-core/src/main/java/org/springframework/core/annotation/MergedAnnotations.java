@@ -447,6 +447,7 @@ public interface MergedAnnotations extends Iterable<MergedAnnotation<Annotation>
 	enum SearchStrategy {
 
 		/**
+		 * 仅查找直接注解，不考虑@Inherited，超类或者接口
 		 * Find only directly declared annotations, without considering
 		 * {@link Inherited @Inherited} annotations and without searching
 		 * superclasses or implemented interfaces.
@@ -454,6 +455,8 @@ public interface MergedAnnotations extends Iterable<MergedAnnotation<Annotation>
 		DIRECT,
 
 		/**
+		 * 查找所有的直接注解，或者superclass应用@Inherited的注解，仅适用于Class
+		 * 其他AnnotatedElement不适用
 		 * Find all directly declared annotations as well as any
 		 * {@link Inherited @Inherited} superclass annotations. This strategy
 		 * is only really useful when used with {@link Class} types since the
@@ -464,6 +467,7 @@ public interface MergedAnnotations extends Iterable<MergedAnnotation<Annotation>
 		INHERITED_ANNOTATIONS,
 
 		/**
+		 * 查找所有直接或者超类的注解，与INHERITED_ANNOTATIONS相似，但是元注解不需要应用@Inherited
 		 * Find all directly declared and superclass annotations. This strategy
 		 * is similar to {@link #INHERITED_ANNOTATIONS} except the annotations
 		 * do not need to be meta-annotated with {@link Inherited @Inherited}.
@@ -472,6 +476,7 @@ public interface MergedAnnotations extends Iterable<MergedAnnotation<Annotation>
 		SUPERCLASS,
 
 		/**
+		 * SUPERCLASS + 接口
 		 * Perform a full search of the entire type hierarchy, including
 		 * superclasses and implemented interfaces. Superclass annotations do
 		 * not need to be meta-annotated with {@link Inherited @Inherited}.
@@ -479,6 +484,7 @@ public interface MergedAnnotations extends Iterable<MergedAnnotation<Annotation>
 		TYPE_HIERARCHY,
 
 		/**
+		 * TYPE_HIERARCHY + 内部类
 		 * Perform a full search of the entire type hierarchy on the source
 		 * <em>and</em> any enclosing classes. This strategy is similar to
 		 * {@link #TYPE_HIERARCHY} except that {@linkplain Class#getEnclosingClass()

@@ -167,6 +167,7 @@ public abstract class AnnotationUtils {
 	}
 
 	/**
+	 * 从指定annotation 上查找单个指定annotationType的注解。返回值为它本身或者直接元注解。
 	 * Get a single {@link Annotation} of {@code annotationType} from the supplied
 	 * annotation: either the given annotation itself or a direct meta-annotation
 	 * thereof.
@@ -196,6 +197,8 @@ public abstract class AnnotationUtils {
 	}
 
 	/**
+	 * 从指定annotatedElement 上查找单个指定annotationType的注解。
+	 * 返回值为应用在annotatedElement上的注解或者注解的第一级元注解。
 	 * Get a single {@link Annotation} of {@code annotationType} from the supplied
 	 * {@link AnnotatedElement}, where the annotation is either <em>present</em> or
 	 * <em>meta-present</em> on the {@code AnnotatedElement}.
@@ -226,6 +229,7 @@ public abstract class AnnotationUtils {
 	}
 
 	/**
+	 * 从指定method 上查找单个指定annotationType的注解。返回值为应用在method上的注解或者注解的第一级元注解。
 	 * Get a single {@link Annotation} of {@code annotationType} from the
 	 * supplied {@link Method}, where the annotation is either <em>present</em>
 	 * or <em>meta-present</em> on the method.
@@ -457,6 +461,8 @@ public abstract class AnnotationUtils {
 	}
 
 	/**
+	 * 从指定annotatedElement 上查找单个指定annotationType的注解。
+	 * 返回值为应用在annotatedElement上的注解或者元注解。
 	 * Find a single {@link Annotation} of {@code annotationType} on the
 	 * supplied {@link AnnotatedElement}.
 	 * <p>Meta-annotations will be searched if the annotation is not
@@ -493,6 +499,8 @@ public abstract class AnnotationUtils {
 	}
 
 	/**
+	 * 从指定method 上查找单个指定annotationType的注解。
+	 * 返回值为应用在method上的注解或者超类（或者接口）上的overrided的方法的注解。
 	 * Find a single {@link Annotation} of {@code annotationType} on the supplied
 	 * {@link Method}, traversing its super methods (i.e. from superclasses and
 	 * interfaces) if the annotation is not <em>directly present</em> on the given
@@ -526,6 +534,7 @@ public abstract class AnnotationUtils {
 	}
 
 	/**
+	 * 从指定class 上查找单个指定annotationType的注解。查找遍历它的注解，实现接口，superclass。
 	 * Find a single {@link Annotation} of {@code annotationType} on the
 	 * supplied {@link Class}, traversing its interfaces, annotations, and
 	 * superclasses if the annotation is not <em>directly present</em> on

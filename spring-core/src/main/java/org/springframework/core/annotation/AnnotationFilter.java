@@ -19,6 +19,7 @@ package org.springframework.core.annotation;
 import java.lang.annotation.Annotation;
 
 /**
+ * 函数式接口，用于过滤指定注解
  * Callback interface that can be used to filter specific annotation types.
  *
  * <p>Note that the {@link MergedAnnotations} model (which this interface has been
@@ -35,7 +36,7 @@ import java.lang.annotation.Annotation;
 public interface AnnotationFilter {
 
 	/**
-	 * 判断注解是否来自于java.lang、org.springframework.lang两个包内
+	 * java和spring的原生注解
 	 * {@link AnnotationFilter} that matches annotations in the
 	 * {@code java.lang} and {@code org.springframework.lang} packages
 	 * and their subpackages.
@@ -44,13 +45,14 @@ public interface AnnotationFilter {
 	AnnotationFilter PLAIN = packages("java.lang", "org.springframework.lang");
 
 	/**
-	 * 判断注解是否来自于java、javax两个包内
+	 * java注解
 	 * {@link AnnotationFilter} that matches annotations in the
 	 * {@code java} and {@code javax} packages and their subpackages.
 	 */
 	AnnotationFilter JAVA = packages("java", "javax");
 
 	/**
+	 * 不过滤任何Annotation
 	 * {@link AnnotationFilter} that always matches and can be used when no
 	 * relevant annotation types are expected to be present at all.
 	 */
@@ -74,6 +76,7 @@ public interface AnnotationFilter {
 	};
 
 	/**
+	 * 过滤全部的Annotation
 	 * {@link AnnotationFilter} that never matches and can be used when no
 	 * filtering is needed (allowing for any annotation types to be present).
 	 * @deprecated as of 5.2.6 since the {@link MergedAnnotations} model

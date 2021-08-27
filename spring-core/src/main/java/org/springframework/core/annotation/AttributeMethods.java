@@ -65,12 +65,19 @@ final class AttributeMethods {
 	 */
 	private final Method[] attributeMethods;
 
+	/**
+	 * 注解方法没有设值时是否抛出异常
+	 */
 	private final boolean[] canThrowTypeNotPresentException;
 
-	//是否包含有默认返回值的方法
+	/**
+	 * 是否包含有默认返回值的方法
+	 */
 	private final boolean hasDefaultValueMethod;
 
-	//是否包含嵌套注解
+	/**
+	 * 是否包含嵌套注解
+	 */
 	private final boolean hasNestedAnnotation;
 
 
@@ -83,16 +90,17 @@ final class AttributeMethods {
 		for (int i = 0; i < attributeMethods.length; i++) {
 			Method method = this.attributeMethods[i];
 			Class<?> type = method.getReturnType();
-			//方法是否有默认返回值（只有注解里面的方法才有默认返回值）
+			// 方法是否有默认返回值（只有注解里面的方法才有默认返回值）
 			if (method.getDefaultValue() != null) {
 				foundDefaultValueMethod = true;
 			}
-			//当前方法的返回值是否为注解，或者注解数组，判断是否有嵌套注解
+			// 当前方法的返回值为注解，或者注解数组，则为嵌套注解
 			if (type.isAnnotation() || (type.isArray() && type.getComponentType().isAnnotation())) {
 				foundNestedAnnotation = true;
 			}
-			//修改方法的访问权限
+			// 修改方法的访问权限
 			ReflectionUtils.makeAccessible(method);
+			// 如果属性类型为类、类数组、枚举，则不赋值时抛出异常
 			this.canThrowTypeNotPresentException[i] = (type == Class.class || type == Class[].class || type.isEnum());
 		}
 		this.hasDefaultValueMethod = foundDefaultValueMethod;
@@ -101,7 +109,7 @@ final class AttributeMethods {
 
 
 	/**
-	 * 该注解是否只有一个value方法
+	 * 是否仅包含value属性
 	 * Determine if this instance only contains a single attribute named
 	 * {@code value}.
 	 * @return {@code true} if there is only a value attribute
@@ -113,7 +121,7 @@ final class AttributeMethods {
 
 
 	/**
-	 * 判断annotationType是否能创建实例
+	 * 判断注解是否合法，如果需要赋值的属性，没有属性则返回false
 	 * Determine if values from the given annotation can be safely accessed without
 	 * causing any {@link TypeNotPresentException TypeNotPresentExceptions}.
 	 * @param annotation the annotation to check
@@ -276,7 +284,7 @@ final class AttributeMethods {
 	}
 
 	/**
-	 * 通过注解的Class类型获取所有注解方法，再转为AttributeMethods类型
+	 * 计算注解类型的属性方法
 	 * @param annotationType
 	 * @return
 	 */

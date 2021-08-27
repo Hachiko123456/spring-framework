@@ -28,6 +28,7 @@ import java.lang.reflect.Method;
 import java.util.Map;
 
 /**
+ * 可重复注解容器
  * {@link Repeatable}注解容器类
  * {@link Repeatable}作用：如果想在一个类上标注重复的注解（例如@A），则需要指明@A注解的容器，
  * 指明容器则用{@link Repeatable}
@@ -175,17 +176,17 @@ public abstract class RepeatableContainers {
 		 * @return
 		 */
 		private static Object computeRepeatedAnnotationsMethod(Class<? extends Annotation> annotationType) {
-			//把注解对应的Class类型转为AttributeMethods
+			// 把注解对应的Class类型里面的方法转为AttributeMethods
 			AttributeMethods methods = AttributeMethods.forAnnotationType(annotationType);
-			//如果该注解只包含一个value方法
+			// 如果该注解只包含一个value方法
 			if (methods.hasOnlyValueAttribute()) {
 				Method method = methods.get(0);
-				//获取方法的返回值类型
+				// 获取方法的返回值类型
 				Class<?> returnType = method.getReturnType();
-				//如果返回值是个数组
+				// 如果返回值是个数组
 				if (returnType.isArray()) {
 					Class<?> componentType = returnType.getComponentType();
-					//如果数组的类型是一个注解且该注解被@Repeatable标注，则返回该方法
+					// 如果数组的`类型`是一个注解且该注解被@Repeatable标注，则返回该方法
 					if (Annotation.class.isAssignableFrom(componentType) &&
 							componentType.isAnnotationPresent(Repeatable.class)) {
 						return method;
@@ -225,21 +226,21 @@ public abstract class RepeatableContainers {
 			super(parent);
 			Assert.notNull(repeatable, "Repeatable must not be null");
 			/**
-			 * 如果容器为空，则用{@link Repeatable}的value值
+			 * 如果自定义的容器为空，则用{@link Repeatable}的value值
 			 */
 			if (container == null) {
 				container = deduceContainer(repeatable);
 			}
-			//获取容器类的value方法
+			// 获取容器类的value方法
 			Method valueMethod = AttributeMethods.forAnnotationType(container).get(MergedAnnotation.VALUE);
 			try {
-				//value方法为空则抛出异常
+				// value方法为空则抛出异常
 				if (valueMethod == null) {
 					throw new NoSuchMethodException("No value method found");
 				}
-				//获取value方法的返回值类型
+				// 获取value方法的返回值类型
 				Class<?> returnType = valueMethod.getReturnType();
-				//如果返回值类型不是数组，或者数组的元素类型不是可重复的类型，则抛出异常
+				// 如果返回值类型不是数组，或者数组的元素类型不是可重复的类型，则抛出异常
 				if (!returnType.isArray() || returnType.getComponentType() != repeatable) {
 					throw new AnnotationConfigurationException("Container type [" +
 							container.getName() +
