@@ -27,7 +27,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 
 /**
- * 提供一个注解在root注解上下文之间的映射信息
+ * 提供单个注解的映射信息
  * Provides mapping information for a single annotation (or meta-annotation) in
  * the context of a root annotation type.
  *
@@ -46,7 +46,8 @@ final class AnnotationTypeMapping {
 
 	@Nullable
 	/**
-	 * 引起此注解被解析的注解。例如：@A_A注解了@A_ROOT,则此属性指向了映射 @A_ROOT的AnnotationTypeMapping实例
+	 * 被当前AnnotationTypeMapping所对应的注解所修饰的注解。
+	 * 例如：@A_A注解了@A_ROOT,则此属性指向了映射 @A_ROOT的AnnotationTypeMapping实例
 	 */
 	private final AnnotationTypeMapping source;
 
@@ -56,7 +57,7 @@ final class AnnotationTypeMapping {
 	private final AnnotationTypeMapping root;
 
 	/**
-	 * 离root的距离，@A_A距离@A_ROOT为1
+	 * MA到root的距离，@A_A距离@A_ROOT为1
 	 */
 	private final int distance;
 
@@ -66,24 +67,25 @@ final class AnnotationTypeMapping {
 	private final Class<? extends Annotation> annotationType;
 
 	/**
-	 * 设计到的注解类型列表，包括source的metaTypes加上annotationType
+	 * 从MA到root这条映射链上的所有注解(闭区间，即包含M，包含root)
 	 */
 	private final List<Class<? extends Annotation>> metaTypes;
 
 	@Nullable
 	/**
-	 * 注解类型实例
+	 * A自身，它应该和annotationType是一致的
+	 * 注意，当M是root的时候，由于此时不存在任何Annotation的实例，所以annotation
+	 * 将会是null。
 	 */
 	private final Annotation annotation;
 
 	/**
-	 * 注解的属性方法包装类
+	 * A_A的属性方法包装类
 	 */
 	private final AttributeMethods attributes;
 
 	/**
-	 *MirrorSet集合
-	 *本注解里声明的属性，最终为同一个属性的 别名 的属性集合为一个MirrorSet
+	 * A_A的属性的镜像集(镜像只包含A自己的属性，但计算是向前统计的)。镜像关系的计算是向前(向root方向)递归的
 	 */
 	private final MirrorSets mirrorSets;
 
@@ -93,22 +95,26 @@ final class AnnotationTypeMapping {
 	private final int[] aliasMappings;
 
 	/**
-	 * 方便访问属性 的映射消息，如果在root中有别名，则优先获取，
+	 * 假设A_A的方法H2和H3互为镜像，H2的方法名为“i”，且root中有同名方法“i”，“i”在root中的索引为4，
+	 * 则conventionMappings=[-1,-1,4,4,-1]
 	 */
 	private final int[] conventionMappings;
 
+	// 下面两个属性是协同工作的
 	/**
-	 * 与annotationValueSource是相匹配的，定义每个属性最终从哪个注解的哪个属性获取值。
+	 * annotationValueMappings的下标是A_A中的属性方法的行文索引（即H0,H1,H2...中的0,1,2）
+	 * 值是该方法在可找到的最顶层级上的镜像方法的行文索引
 	 */
 	private final int[] annotationValueMappings;
 
 	/**
-	 *
+	 * annotationValueSource的下标是A_A中的属性方法的行文索引（即H0,H1,H2...中的0,1,2）
+	 * 值是该方法在可找到的最顶层级上的镜像方法所处的AnnotationTypeMapping实例
 	 */
 	private final AnnotationTypeMapping[] annotationValueSource;
 
 	/**
-	 * 存储每个属性的所有别名属性方法（仅限于本注解定义中的属性方法）
+	 * 存储A_A中每个属性的所有别名属性方法（仅限于本注解定义中的属性方法）
 	 * Key：AliasFor里定义的属性方法，value为本注解内声明的属性方法。resolveAliasedForTargets方法中解析
 	 */
 	private final Map<Method, List<Method>> aliasedBy;
@@ -701,13 +707,30 @@ final class AnnotationTypeMapping {
 
 
 	/**
+	 * 一个实例的容器，用来提供索引申明的镜子的细节
+	 *
+	 * 镜像容器，两个属性互为镜像，不一定它们要AliasFor，比如它们分别AliasFor了父注解中的两个属性
+	 * 而这两个属性在父中注解中是互为AliasFor的，则子注解中的两个属性也互为镜像了
+	 *
+	 * 所以，在这里，spring定义了一种比别名更泛化的概念，叫镜像，属性的镜像关系是根据属性关系的传导而得来的
 	 * A collection of {@link MirrorSet} instances that provides details of all
 	 * defined mirrors.
 	 */
 	class MirrorSets {
 
+		/**
+		 * assigned的去重版
+		 */
 		private MirrorSet[] mirrorSets;
 
+		/**
+		 * 假设A_A中有6个属性方法
+		 * a，b互为镜像的方法，c，d互为镜像的方法，e，f是独立的方法
+		 * 则updateFrom(aliases(a))或updateFrom(aliases(b))之后
+		 * [mirrorSet1,mirrorSet1,null,null,null,null]
+		 * updateFrom(aliases(c))或updateFrom(aliases(d))之后
+		 * [mirrorSet1,mirrorSet1,mirrorSet2,mirrorSet2,null,null]
+		 */
 		private final MirrorSet[] assigned;
 
 		MirrorSets() {
@@ -771,12 +794,20 @@ final class AnnotationTypeMapping {
 
 
 		/**
+		 * MirrorSet代表一组互为镜像的属性
+		 * 假设，注解A的方法H3和方法H4互为镜像方法，A的某个实例记为a，代表着两个镜像方法的MirrorSet实例为m
+		 * 则调用m.resolve，可从实例a中获取H3或H4其中不是那个默认值的方法的索引（即得到3或者4）
 		 * A single set of mirror attributes.
 		 */
 		class MirrorSet {
 
+			// 镜像方法的数量
 			private int size;
 
+			/**
+			 * 假设A有5个属性方法，其中第三个和第四个互为镜像，则update后的数组如下：
+			 * [2,3,-1,-1,-1]
+			 */
 			private final int[] indexes = new int[attributes.size()];
 
 			void update() {
@@ -790,6 +821,20 @@ final class AnnotationTypeMapping {
 				}
 			}
 
+			/**
+			 * 以annotation为执行器，找出它的非默认值的属性方法行文索引
+			 *
+			 * 一个注解中相互为镜像的属性方法：
+			 * 如果有超过一个设置了值，值不相同则会抛出异常
+			 * 如果有超过一个的属性设置了值，值相同，则返回最后一个的属性方法行文索引
+			 * 如果只有一个属性设置了值，则返回这个属性方法的行文索引
+			 * 如果索引属性都是默认值，则result=-1
+			 * @param source
+			 * @param annotation
+			 * @param valueExtractor
+			 * @param <A>
+			 * @return
+			 */
 			<A> int resolve(@Nullable Object source, @Nullable A annotation, ValueExtractor valueExtractor) {
 				int result = -1;
 				Object lastValue = null;

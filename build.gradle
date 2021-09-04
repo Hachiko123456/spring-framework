@@ -181,9 +181,10 @@ configure(allprojects) { project ->
 				exclude group: "dom4j", name: "dom4j"
 			}
 
-			dependency("junit:junit:4.13.1") {
-				exclude group: "org.hamcrest", name: "hamcrest-core"
-			}
+//			dependency("junit:junit:4.13.1") {
+//				exclude group: "org.hamcrest", name: "hamcrest-core"
+//			}
+			dependency "junit:junit:4.12"
 			dependency("de.bechte.junit:junit-hierarchicalcontextrunner:4.12.1") {
 				exclude group: "junit", name: "junit"
 			}

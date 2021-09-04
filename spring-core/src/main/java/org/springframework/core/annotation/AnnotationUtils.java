@@ -213,6 +213,7 @@ public abstract class AnnotationUtils {
 	@Nullable
 	public static <A extends Annotation> A getAnnotation(AnnotatedElement annotatedElement, Class<A> annotationType) {
 		// Shortcut: directly present on the element, with no merging needed?
+		// 如果是java包下的注解，则直接获取
 		if (AnnotationFilter.PLAIN.matches(annotationType) ||
 				AnnotationsScanner.hasPlainJavaAnnotationsOnly(annotatedElement)) {
 			return annotatedElement.getAnnotation(annotationType);
