@@ -707,7 +707,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	@Override
 	@Nullable
 	protected Class<?> predictBeanType(String beanName, RootBeanDefinition mbd, Class<?>... typesToMatch) {
-	    // 增加对工厂FactoryMethod的解析
+	    // 增加对工厂方法FactoryMethod的解析
 		Class<?> targetType = determineTargetType(beanName, mbd, typesToMatch);
 		// Apply SmartInstantiationAwareBeanPostProcessors to predict the
 		// eventual type after a before-instantiation shortcut.
@@ -748,7 +748,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	}
 
 	/**
-     * 从工厂方法中获取其类型
+     * 获取工厂方法的返回值类型，包括泛型处理，静态工厂和实例工厂等等
 	 * Determine the target type for the given bean definition which is based on
 	 * a factory method. Only called if there is no singleton instance registered
 	 * for the target bean already.
@@ -764,15 +764,15 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 */
 	@Nullable
 	protected Class<?> getTypeForFactoryMethod(String beanName, RootBeanDefinition mbd, Class<?>... typesToMatch) {
-	    // 缓存中直接获取
+	    // 1.查找缓存
 		ResolvableType cachedReturnType = mbd.factoryMethodReturnType;
 		if (cachedReturnType != null) {
 			return cachedReturnType.resolve();
 		}
 
-		// 如果有多个方法同名，则去其返回值的公有类型，除非为null
+		// 2.匹配Method，包括父类方法
 		Class<?> commonType = null;
-		// 缓存这个工厂方法
+		// 2.1.缓存这个工厂方法
 		Method uniqueCandidate = mbd.factoryMethodToIntrospect;
 
 		if (uniqueCandidate == null) {
@@ -788,20 +788,20 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 							"factory-bean reference points back to the same bean definition");
 				}
 				// Check declared factory method return type on factory class.
-                // 获取实例工厂的类型
+                // 2.2.获取实例工厂的类型
 				factoryClass = getType(factoryBeanName);
 				isStatic = false;
 			}
 			else {
 				// Check declared factory method return type on bean class.
-                // 静态工厂只能是静态方法，解析自己的BeanDefinition就可以了
+                // 2.3.静态工厂只能是静态方法，解析自己的BeanDefinition就可以了
 				factoryClass = resolveBeanClass(mbd, beanName, typesToMatch);
 			}
 
 			if (factoryClass == null) {
 				return null;
 			}
-			// 如果是CGLIB代理，获取其真实类型
+			// 2.4.如果是CGLIB代理，获取其真实类型
 			factoryClass = ClassUtils.getUserClass(factoryClass);
 
 			// If all factory methods have the same return type, return that type.
@@ -815,6 +815,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 			// 遍历所有名称为工厂方法的
 			for (Method candidate : candidates) {
+				// 匹配static、factoryMethodName，parameterCount
 				if (Modifier.isStatic(candidate.getModifiers()) == isStatic && mbd.isFactoryMethod(candidate) &&
 						candidate.getParameterCount() >= minNrOfArgs) {
 					// Declared type variables to inspect?
@@ -928,17 +929,17 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		// Consider factory methods
-        // 这个FactoryBean 也可能是其他的工厂的工厂方法创建的
+        // 1.1 这个FactoryBean 也可能是其他的工厂的工厂方法创建的
 		String factoryBeanName = mbd.getFactoryBeanName();
 		String factoryMethodName = mbd.getFactoryMethodName();
 
 		// Scan the factory bean methods
-        // 实例工厂创建FactoryBean
+        // 1.2 实例工厂创建FactoryBean
 		if (factoryBeanName != null) {
-		    // 如果实例工厂的className已经解析过了，就直接从其工厂方法的返回值类型进行推断
 			if (factoryMethodName != null) {
 				// Try to obtain the FactoryBean's object type from its factory method
 				// declaration without instantiating the containing bean at all.
+				// 1.3 如果已经实例化factoryBeanName
 				BeanDefinition factoryBeanDefinition = getBeanDefinition(factoryBeanName);
 				Class<?> factoryBeanClass;
 				if (factoryBeanDefinition instanceof AbstractBeanDefinition &&
@@ -950,6 +951,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 					factoryBeanClass = determineTargetType(factoryBeanName, fbmbd);
 				}
 				if (factoryBeanClass != null) {
+					// 1.4 直接解析factoryMethodName方法返回值上FactoryBean的泛型
 					result = getTypeForFactoryBeanFromMethod(factoryBeanClass, factoryMethodName);
 					if (result.resolve() != null) {
 						return result;
@@ -959,7 +961,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			// If not resolvable above and the referenced factory bean doesn't exist yet,
 			// exit here - we don't want to force the creation of another bean just to
 			// obtain a FactoryBean's object type...
-            // 判断这个实例工厂有没有实例化，如果没有则直接返回null(不会去创建bean)
+            // 1.5 如果factoryBeanName没有实例化，spring不会去尝试实例化这个嵌套FactoryBean，而是直接返回null
 			if (!isBeanEligibleForMetadataCaching(factoryBeanName)) {
 				return ResolvableType.NONE;
 			}
@@ -967,28 +969,32 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		// If we're allowed, we can create the factory bean and call getObjectType() early
 		if (allowInit) {
+			// 2.1 实例化factoryBean，然后调用其getObjectType()来获取对象类型
 			FactoryBean<?> factoryBean = (mbd.isSingleton() ?
 					getSingletonFactoryBeanForTypeCheck(beanName, mbd) :
 					getNonSingletonFactoryBeanForTypeCheck(beanName, mbd));
 			if (factoryBean != null) {
 				// Try to obtain the FactoryBean's object type from this early stage of the instance.
+				// 2.1 尝试调用getObjectType()来获取对象类型
 				Class<?> type = getTypeForFactoryBean(factoryBean);
 				if (type != null) {
 					return ResolvableType.forClass(type);
 				}
 				// No type found for shortcut FactoryBean instance:
 				// fall back to full creation of the FactoryBean instance.
+				// 2.2 如果实例化还是无法获取到，只能将这个FactoryBean初始化
 				return super.getTypeForFactoryBean(beanName, mbd, true);
 			}
 		}
 
-		// factoryBeanName==null说明是静态工厂创建FactoryBean，解析方法的返回值的泛型类型
+		// 3.1 factoryBeanName==null说明是静态工厂创建FactoryBean
 		if (factoryBeanName == null && mbd.hasBeanClass() && factoryMethodName != null) {
 			// No early bean instantiation possible: determine FactoryBean's type from
 			// static factory method signature or from class inheritance hierarchy...
+			// 3.2 解析方法的返回值的泛型类型
 			return getTypeForFactoryBeanFromMethod(mbd.getBeanClass(), factoryMethodName);
 		}
-		// 否则该类就是一个FactoryBean，直接解析其泛型即可
+		// 3.2 否则该类就是一个FactoryBean，直接解析其泛型即可,FactoryBean<User>
 		result = getFactoryBeanGeneric(beanType);
 		if (result.resolve() != null) {
 			return result;
@@ -1004,6 +1010,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	}
 
 	/**
+	 *
 	 * Introspect the factory method signatures on the given bean class,
 	 * trying to find a common {@code FactoryBean} object type declared there.
 	 * @param beanClass the bean class to find the factory method on
@@ -2174,6 +2181,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 
 	/**
+	 * 提取工厂方法返回值FactoryBean上的泛型类型
 	 * {@link MethodCallback} used to find {@link FactoryBean} type information.
 	 */
 	private static class FactoryBeanMethodTypeFinder implements MethodCallback {
@@ -2206,6 +2214,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		private boolean isFactoryBeanMethod(Method method) {
 			return (method.getName().equals(this.factoryMethodName) &&
+					// 返回值是FactoryBean类型
 					FactoryBean.class.isAssignableFrom(method.getReturnType()));
 		}
 
