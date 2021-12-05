@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * 从spring容器中检索出Advisor的工具类
  * Helper for retrieving standard Spring Advisors from a BeanFactory,
  * for use with auto-proxying.
  *
@@ -43,6 +44,9 @@ public class BeanFactoryAdvisorRetrievalHelper {
 
 	private final ConfigurableListableBeanFactory beanFactory;
 
+	/**
+	 * Advisor 名称列表缓存
+	 */
 	@Nullable
 	private volatile String[] cachedAdvisorBeanNames;
 
@@ -82,6 +86,7 @@ public class BeanFactoryAdvisorRetrievalHelper {
 		// 过滤掉正在创建中的bean
 		for (String name : advisorNames) {
 			if (isEligibleBean(name)) {
+				// 忽略创建中的advisor bean
 				if (this.beanFactory.isCurrentlyInCreation(name)) {
 					if (logger.isTraceEnabled()) {
 						logger.trace("Skipping currently created advisor '" + name + "'");
@@ -89,6 +94,7 @@ public class BeanFactoryAdvisorRetrievalHelper {
 				}
 				else {
 					try {
+						// 从beanFactory中获取名称为name的bean，并将bean添加到Advisor中
 						advisors.add(this.beanFactory.getBean(name, Advisor.class));
 					}
 					catch (BeanCreationException ex) {

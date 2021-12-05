@@ -198,7 +198,7 @@ final class JdkDynamicAopProxy implements AopProxy, InvocationHandler, Serializa
 
 			Object retVal;
 
-			// 需要暴露代理对象，则放到AopContext中
+			// expose-proxy=true 暴露代理对象到AopContext中
 			if (this.advised.exposeProxy) {
 				// Make invocation available if necessary.
 				oldProxy = AopContext.setCurrentProxy(proxy);
@@ -225,11 +225,12 @@ final class JdkDynamicAopProxy implements AopProxy, InvocationHandler, Serializa
 				// nothing but a reflective operation on the target, and no hot swapping or fancy proxying.
 				// 获取方法请求的参数(有时候方法中有可变参数(...),传入的参数类型和这种类型不一样的时候，会通过下面的adaptArgumentsIfNecessary方法进行转换)
 				Object[] argsToUse = AopProxyUtils.adaptArgumentsIfNecessary(method, args);
+				// 通过反射执行目标方法
 				retVal = AopUtils.invokeJoinpointUsingReflection(target, method, argsToUse);
 			}
 			else {
 				// We need to create a method invocation...
-				// 创建一个方法调用器，该对象就是Jointpoint对象
+				// 创建一个方法调用器，将拦截器链传入其中
 				MethodInvocation invocation =
 						new ReflectiveMethodInvocation(proxy, target, method, args, targetClass, chain);
 				// Proceed to the joinpoint through the interceptor chain.
@@ -238,7 +239,7 @@ final class JdkDynamicAopProxy implements AopProxy, InvocationHandler, Serializa
 			}
 
 			// Massage return value if necessary.
-			// 如果返回类型为目标对象自身，则最后需要将返回值设置为代理对象
+			// 获取方法的返回值类型
 			Class<?> returnType = method.getReturnType();
 			if (retVal != null && retVal == target &&
 					returnType != Object.class && returnType.isInstance(proxy) &&
@@ -246,7 +247,7 @@ final class JdkDynamicAopProxy implements AopProxy, InvocationHandler, Serializa
 				// Special case: it returned "this" and the return type of the method
 				// is type-compatible. Note that we can't help if the target sets
 				// a reference to itself in another returned object.
-				// 将返回值设置为代理对象
+				// 如果方法返回值为this，即return this，则将代理对象proxy赋值给retVal
 				retVal = proxy;
 			}
 			// 如果返回类型是基本类型，且返回值为null，因为将null转换为原始类型会报错，所以此处直接抛出异常

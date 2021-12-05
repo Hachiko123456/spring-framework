@@ -44,11 +44,12 @@ public class BeanFactoryAspectJAdvisorsBuilder {
 
 	/**
 	 * Advisor工厂，用于解析@AspectJ注解的Bean中的Advisor
+	 * 默认实现是{@link ReflectiveAspectJAdvisorFactory}
 	 */
 	private final AspectJAdvisorFactory advisorFactory;
 
 	/**
-	 * 用于缓存带有@AspectJ注解的Bean的名称
+	 * 带有@AspectJ注解的Bean的名称
 	 */
 	@Nullable
 	private volatile List<String> aspectBeanNames;
@@ -90,6 +91,7 @@ public class BeanFactoryAspectJAdvisorsBuilder {
 
 
 	/**
+	 * 解析@Aspect注解，并构建Advisor
 	 * Look for AspectJ-annotated aspect beans in the current bean factory,
 	 * and return to a list of Spring AOP Advisors representing them.
 	 * <p>Creates a Spring Advisor for each AspectJ advice method.
@@ -99,22 +101,24 @@ public class BeanFactoryAspectJAdvisorsBuilder {
 	public List<Advisor> buildAspectJAdvisors() {
 		List<String> aspectNames = this.aspectBeanNames;
 
+		// 如果aspectNames没有缓存
 		if (aspectNames == null) {
 			synchronized (this) {
 				aspectNames = this.aspectBeanNames;
 				if (aspectNames == null) {
 					List<Advisor> advisors = new ArrayList<>();
 					aspectNames = new ArrayList<>();
-					// 获取当前IOC容器中所有的Bean的名称集合
+					// 获取当前IOC容器中所有的Bean名称集合
 					String[] beanNames = BeanFactoryUtils.beanNamesForTypeIncludingAncestors(
 							this.beanFactory, Object.class, true, false);
+					// 遍历所有的beanName
 					for (String beanName : beanNames) {
 						if (!isEligibleBean(beanName)) {
 							continue;
 						}
 						// We must be careful not to instantiate beans eagerly as in this case they
 						// would be cached by the Spring container but would not have been weaved.
-						// 获取该Bean的Class对象
+						// 根据beanName获取bean的类型
 						Class<?> beanType = this.beanFactory.getType(beanName, false);
 						if (beanType == null) {
 							continue;
@@ -123,11 +127,14 @@ public class BeanFactoryAspectJAdvisorsBuilder {
 						if (this.advisorFactory.isAspect(beanType)) {
 							aspectNames.add(beanName);
 							AspectMetadata amd = new AspectMetadata(beanType, beanName);
+							// Aspect是否为单例
 							if (amd.getAjType().getPerClause().getKind() == PerClauseKind.SINGLETON) {
 								MetadataAwareAspectInstanceFactory factory =
 										new BeanFactoryAspectInstanceFactory(this.beanFactory, beanName);
+								// 获取通知器
+								// advisorFactory->ReflectiveAspectJAdvisorFactory
 								List<Advisor> classAdvisors = this.advisorFactory.getAdvisors(factory);
-								// 如果Bean是单例模式，解析出来的Advisor全部缓存至'advisorsCache'中
+								// bean是单例模式则放到Advisor缓存中，否则放到Aspect元数据工厂缓存中
 								if (this.beanFactory.isSingleton(beanName)) {
 									this.advisorsCache.put(beanName, classAdvisors);
 								}
@@ -159,6 +166,7 @@ public class BeanFactoryAspectJAdvisorsBuilder {
 			return Collections.emptyList();
 		}
 		List<Advisor> advisors = new ArrayList<>();
+		// 如果aspectNames已经有了缓存，直接从缓存中取出对应的Advisor返回
 		for (String aspectName : aspectNames) {
 			List<Advisor> cachedAdvisors = this.advisorsCache.get(aspectName);
 			if (cachedAdvisors != null) {

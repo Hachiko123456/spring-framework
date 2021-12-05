@@ -33,7 +33,7 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 
 /**
- * AspectJ注解类都会解析成InstantiationModelAwarePointcutAdvisorImpl
+ * 被{@link org.aspectj.lang.annotation.Aspect} 注解的类都会解析成InstantiationModelAwarePointcutAdvisorImpl
  * Internal implementation of AspectJPointcutAdvisor.
  * Note that there will be one instance of this advisor for each target method.
  *
@@ -89,13 +89,13 @@ final class InstantiationModelAwarePointcutAdvisorImpl
 		this.declaringClass = aspectJAdviceMethod.getDeclaringClass();
 		// Advice 对应的方法名称
 		this.methodName = aspectJAdviceMethod.getName();
-		// Advice 对应的方法对象
+		// Advice 对应的方法参数
 		this.parameterTypes = aspectJAdviceMethod.getParameterTypes();
 		// Advice 对应的方法对象
 		this.aspectJAdviceMethod = aspectJAdviceMethod;
-		// Advisor工厂，用于解析@AspectJ注解的Bean中的Advisor
+		// Advisor工厂，用于解析@AspectJ注解的Bean中的Advisor -> ReflectiveAspectJAdvisorFactory
 		this.aspectJAdvisorFactory = aspectJAdvisorFactory;
-		// 元数据实例构建工厂
+		// 元数据实例构建工厂 -> LazySingletonAspectInstanceFactoryDecorator
 		this.aspectInstanceFactory = aspectInstanceFactory;
 		// 定义的顺序
 		this.declarationOrder = declarationOrder;
@@ -119,7 +119,7 @@ final class InstantiationModelAwarePointcutAdvisorImpl
 			// A singleton aspect.
 			this.pointcut = this.declaredPointcut;
 			this.lazy = false;
-			// 非延迟加载，则初始化Advice对象
+			// 非延迟加载，则按照注解解析Advice
 			// 根据 AspectJExpressionPointcut 初始化一个 Advice 对象
 			// `@Around`：AspectJAroundAdvice，实现了 MethodInterceptor
 			// `@Before`：AspectJMethodBeforeAdvice
@@ -162,6 +162,7 @@ final class InstantiationModelAwarePointcutAdvisorImpl
 	}
 
 	private Advice instantiateAdvice(AspectJExpressionPointcut pointcut) {
+		// aspectJAdvisorFactory -> ReflectiveAspectJAdvisorFactory
 		Advice advice = this.aspectJAdvisorFactory.getAdvice(this.aspectJAdviceMethod, pointcut,
 				this.aspectInstanceFactory, this.declarationOrder, this.aspectName);
 		return (advice != null ? advice : EMPTY_ADVICE);

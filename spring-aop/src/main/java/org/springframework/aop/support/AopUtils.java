@@ -204,6 +204,7 @@ public abstract class AopUtils {
 	}
 
 	/**
+	 * 判断targetClass中方法是否符合Pointcut中定义的条件
 	 * Can the given pointcut apply at all on the given class?
 	 * <p>This is an important test as it can be used to optimize
 	 * out a pointcut for a class.
@@ -215,6 +216,7 @@ public abstract class AopUtils {
 	 */
 	public static boolean canApply(Pointcut pc, Class<?> targetClass, boolean hasIntroductions) {
 		Assert.notNull(pc, "Pointcut must not be null");
+		// 1.使用ClassFilter匹配Class
 		if (!pc.getClassFilter().matches(targetClass)) {
 			return false;
 		}
@@ -234,11 +236,14 @@ public abstract class AopUtils {
 		if (!Proxy.isProxyClass(targetClass)) {
 			classes.add(ClassUtils.getUserClass(targetClass));
 		}
+		// 查找当前类以及所有的父类和实现的接口
 		classes.addAll(ClassUtils.getAllInterfacesForClassAsSet(targetClass));
 
 		for (Class<?> clazz : classes) {
+			// 获取父类或者实现的接口中的所有方法
 			Method[] methods = ReflectionUtils.getAllDeclaredMethods(clazz);
 			for (Method method : methods) {
+				// 使用methodMatcher匹配方法，匹配成功后立即返回
 				if (introductionAwareMethodMatcher != null ?
 						introductionAwareMethodMatcher.matches(method, targetClass, hasIntroductions) :
 						methodMatcher.matches(method, targetClass)) {
@@ -275,17 +280,16 @@ public abstract class AopUtils {
 	 */
 	public static boolean canApply(Advisor advisor, Class<?> targetClass, boolean hasIntroductions) {
 		/**
-		 * 从IntroductionAdvisor中获取ClassFilter过滤器，判断这个目标类是否符合条件
+		 * 从通知类型中获取类型过滤器ClassFilter，并调用matches方法进行匹配。
+		 * ClassFilter接口的实现类AspectJExpressionPointCut为例，该类的
+		 * 匹配工作由AspectJ表达式解析器负责。
 		 */
 		if (advisor instanceof IntroductionAdvisor) {
 			return ((IntroductionAdvisor) advisor).getClassFilter().matches(targetClass);
 		}
 		else if (advisor instanceof PointcutAdvisor) {
-			/**
-			 * 根据 Pointcut 中的 ClassFilter 和 MethodFilter 进行过滤
-			 * 例如 Aspect 的实现类 AspectJExpressionPointcut
-			 */
 			PointcutAdvisor pca = (PointcutAdvisor) advisor;
+			// 对于普通类型的通知器，这里继续调用重载方法进行筛选
 			return canApply(pca.getPointcut(), targetClass, hasIntroductions);
 		}
 		else {
@@ -296,6 +300,7 @@ public abstract class AopUtils {
 	}
 
 	/**
+	 * 查找可以应用于clazz的Advisor
 	 * Determine the sublist of the {@code candidateAdvisors} list
 	 * that is applicable to the given class.
 	 * @param candidateAdvisors the Advisors to evaluate
@@ -310,6 +315,7 @@ public abstract class AopUtils {
 		// 能应用于clazz类型的Advisor列表
 		List<Advisor> eligibleAdvisors = new ArrayList<>();
 		for (Advisor candidate : candidateAdvisors) {
+			// 筛选IntroductionAdvisor类型的通知器
 			if (candidate instanceof IntroductionAdvisor && canApply(candidate, clazz)) {
 				eligibleAdvisors.add(candidate);
 			}
@@ -320,6 +326,7 @@ public abstract class AopUtils {
 				// already processed
 				continue;
 			}
+			// 筛选普通类型的通知器
 			if (canApply(candidate, clazz, hasIntroductions)) {
 				eligibleAdvisors.add(candidate);
 			}

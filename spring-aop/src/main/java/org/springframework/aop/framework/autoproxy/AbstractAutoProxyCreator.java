@@ -359,6 +359,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	}
 
 	/**
+	 * 创建bean的代理对象
 	 * Wrap the given bean if necessary, i.e. if it is eligible for being proxied.
 	 * @param bean the raw bean instance
 	 * @param beanName the name of the bean
@@ -470,6 +471,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	}
 
 	/**
+	 * 为目标bean创建代理对象
 	 * Create an AOP proxy for the given bean.
 	 * @param beanClass the class of the bean
 	 * @param beanName the name of the bean
@@ -491,9 +493,8 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		ProxyFactory proxyFactory = new ProxyFactory();
 		proxyFactory.copyFrom(this);
 
-		// 判断是否为类代理，也就是是否开启CGLIB代理，默认为false
+		// 默认配置下或者用户显式设置了proxy-target-class=false时
 		if (!proxyFactory.isProxyTargetClass()) {
-			// 判断beanName对应的BeanDefinition的preserveTargetClass属性是否为true
 			if (shouldProxyTargetClass(beanClass, beanName)) {
 				proxyFactory.setProxyTargetClass(true);
 			}
@@ -504,7 +505,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 			}
 		}
 
-		// 把specialInterceptors列表中非Advisor类型的对象转为Advisor类型（AbstractAdvisorAutoProxyCreator#getAdvicesAndAdvisorsForBean是从BeanFactory中找的Advisor类型对象）
+		// 把specialInterceptors列表中的Advice转为Advisor
 		Advisor[] advisors = buildAdvisors(beanName, specificInterceptors);
 		// 添加advisors，贯穿整个创建代理对象的过程
 		proxyFactory.addAdvisors(advisors);
@@ -517,6 +518,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 			proxyFactory.setPreFiltered(true);
 		}
 
+		// 创建代理
 		return proxyFactory.getProxy(getProxyClassLoader());
 	}
 

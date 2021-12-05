@@ -47,6 +47,7 @@ public abstract class AspectJProxyUtils {
 		// Don't add advisors to an empty list; may indicate that proxying is just not required
 		if (!advisors.isEmpty()) {
 			boolean foundAspectJAdvice = false;
+			// 检测advisor列表中是否存在AspectJ类型的Advisor或者Advice
 			for (Advisor advisor : advisors) {
 				// Be careful not to get the Advice without a guard, as this might eagerly
 				// instantiate a non-singleton AspectJ aspect...
@@ -55,7 +56,11 @@ public abstract class AspectJProxyUtils {
 					break;
 				}
 			}
-			// ExposeInvocationInterceptor -> 用于暴露MethodInvocation对象
+			/**
+			 * 向advisors列表的首部添加DefaultPointcutAdvisor，DefaultPointcutAdvisor的构造方法会传入一个Advice->ExposeInvocationInterceptor
+			 * 主要作用用于暴露当前的MethodInterceptor到ThreadLocal中，如果其他地方需要当前的MethodInterceptor对象，可以直接通过
+			 * {@link ExposeInvocationInterceptor#currentInvocation()}方法获取
+			 */
 			if (foundAspectJAdvice && !advisors.contains(ExposeInvocationInterceptor.ADVISOR)) {
 				advisors.add(0, ExposeInvocationInterceptor.ADVISOR);
 				return true;

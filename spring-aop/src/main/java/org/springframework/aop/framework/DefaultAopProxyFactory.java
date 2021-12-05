@@ -59,9 +59,9 @@ public class DefaultAopProxyFactory implements AopProxyFactory, Serializable {
 	public AopProxy createAopProxy(AdvisedSupport config) throws AopConfigException {
 		if (!IN_NATIVE_IMAGE &&
 				/**
-				 * 1.需要优化 -> 默认为false
-				 * 2.使用类代理
-				 * 3.目标类没有实现接口，或者实现的接口为{@link SpringProxy}
+				 * 1.config.isOptimize() 需要优化 -> 默认为false
+				 * 2.config.isProxyTargetClass() 检测proxyTargetClass的值，前面代码有设置这个值
+				 * 3.hasNoUserSuppliedProxyInterfaces(config) 目标类没有实现接口，或者实现的接口为{@link SpringProxy}
  				 */
 				(config.isOptimize() || config.isProxyTargetClass() || hasNoUserSuppliedProxyInterfaces(config))) {
 			Class<?> targetClass = config.getTargetClass();

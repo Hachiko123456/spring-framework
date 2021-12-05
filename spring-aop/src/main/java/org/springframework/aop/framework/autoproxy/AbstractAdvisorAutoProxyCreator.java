@@ -98,11 +98,11 @@ public abstract class AbstractAdvisorAutoProxyCreator extends AbstractAutoProxyC
 	 * @see #extendAdvisors
 	 */
 	protected List<Advisor> findEligibleAdvisors(Class<?> beanClass, String beanName) {
-		// 查找spring上下文中的Advisor
+		// 查找IOC容器中的Advisor
 		List<Advisor> candidateAdvisors = findCandidateAdvisors();
-		// 查找可以应用于beanClass的Advisor
+		// 筛选可以应用于beanClass上的Advisor，通过ClassFilter和MethodMatcher对目标类和方法进行匹配
 		List<Advisor> eligibleAdvisors = findAdvisorsThatCanApply(candidateAdvisors, beanClass, beanName);
-		// 空实现，交由子类扩展
+		// 对通知器列表进行拓展 -> AspectJAwareAdvisorAutoProxyCreator.extendAdvisors
 		extendAdvisors(eligibleAdvisors);
 		// 排序
 		// 不同的 AspectJ 根据 @Order 排序
@@ -114,7 +114,7 @@ public abstract class AbstractAdvisorAutoProxyCreator extends AbstractAutoProxyC
 	}
 
 	/**
-	 * 查找spring上下文中的Advisor
+	 * 查找IOC中的Advisor
 	 * Find all candidate Advisors to use in auto-proxying.
 	 * @return the List of candidate Advisors
 	 */
