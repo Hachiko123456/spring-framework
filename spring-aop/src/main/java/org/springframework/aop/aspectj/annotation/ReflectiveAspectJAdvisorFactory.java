@@ -353,6 +353,7 @@ public class ReflectiveAspectJAdvisorFactory extends AbstractAspectJAdvisorFacto
 			// 设置参数名
 			springAdvice.setArgumentNamesFromStringArray(argNames);
 		}
+		// 解析定义的advice方法的参数
 		springAdvice.calculateArgumentBindings();
 
 		return springAdvice;

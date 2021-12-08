@@ -376,19 +376,26 @@ public abstract class AbstractAspectJAdvice implements Advice, AspectJPrecedence
 	 */
 	public final synchronized void calculateArgumentBindings() {
 		// The simple case... nothing to bind.
+		// 如果已经解析过或者参数列表为空，则忽略解析
 		if (this.argumentsIntrospected || this.parameterTypes.length == 0) {
 			return;
 		}
 
 		int numUnboundArgs = this.parameterTypes.length;
 		Class<?>[] parameterTypes = this.aspectJAdviceMethod.getParameterTypes();
+		/**
+		 * 明确参数的类型
+		 * {@link JoinPoint}、{@link ProceedingJoinPoint} 、{@link org.aspectj.lang.JoinPoint.StaticPart}
+		 */
 		if (maybeBindJoinPoint(parameterTypes[0]) || maybeBindProceedingJoinPoint(parameterTypes[0]) ||
 				maybeBindJoinPointStaticPart(parameterTypes[0])) {
 			numUnboundArgs--;
 		}
 
+		// 如果除上述三个参数外还定义了其他的参数
 		if (numUnboundArgs > 0) {
 			// need to bind arguments by name as returned from the pointcut match
+			// 根据名称去advice命中的方法中获取
 			bindArgumentsByName(numUnboundArgs);
 		}
 
@@ -547,6 +554,7 @@ public abstract class AbstractAspectJAdvice implements Advice, AspectJPrecedence
 	}
 
 	/**
+	 * 绑定切面方法定义的参数
 	 * Take the arguments at the method execution join point and output a set of arguments
 	 * to the advice method.
 	 * @param jp the current JoinPoint
@@ -561,20 +569,25 @@ public abstract class AbstractAspectJAdvice implements Advice, AspectJPrecedence
 		calculateArgumentBindings();
 
 		// AMC start
+		// 通知方法的参数
 		Object[] adviceInvocationArgs = new Object[this.parameterTypes.length];
 		int numBound = 0;
 
+		// 如果joinPointArgumentIndex=0，说明通知方法第一个参数类型为JointPoint
 		if (this.joinPointArgumentIndex != -1) {
 			adviceInvocationArgs[this.joinPointArgumentIndex] = jp;
 			numBound++;
 		}
+		// 如果joinPointStaticPartArgumentIndex=0，说明通知方法第一个参数类型为JoinPoint.StaticPart
 		else if (this.joinPointStaticPartArgumentIndex != -1) {
 			adviceInvocationArgs[this.joinPointStaticPartArgumentIndex] = jp.getStaticPart();
 			numBound++;
 		}
 
+		// argumentBindings一般是后置通知或最终通知以及异常通知，我们方法上给定参数对象的变量名
 		if (!CollectionUtils.isEmpty(this.argumentBindings)) {
 			// binding from pointcut match
+			// JointPointMatch对象是前面从ProxyMethodInvocation中获取，一般不会去设置，默认返回null
 			if (jpMatch != null) {
 				PointcutParameter[] parameterBindings = jpMatch.getParameterBindings();
 				for (PointcutParameter parameter : parameterBindings) {
@@ -585,12 +598,15 @@ public abstract class AbstractAspectJAdvice implements Advice, AspectJPrecedence
 				}
 			}
 			// binding from returning clause
+			// 如果是目标方法执行后的通知，则可以获取它的返回值
+			// 如果我们的通知方法参数给定了此返回值参数，这里就会进行返回值赋值
 			if (this.returningName != null) {
 				Integer index = this.argumentBindings.get(this.returningName);
 				adviceInvocationArgs[index] = returnValue;
 				numBound++;
 			}
 			// binding from thrown exception
+			// 异常通知，如果方法参数上指定了异常名称，则进行异常对象赋值
 			if (this.throwingName != null) {
 				Integer index = this.argumentBindings.get(this.throwingName);
 				adviceInvocationArgs[index] = ex;
@@ -604,6 +620,7 @@ public abstract class AbstractAspectJAdvice implements Advice, AspectJPrecedence
 					(jpMatch == null ? "was NOT" : "WAS") + " bound in invocation)");
 		}
 
+		// 返回最终的参数对象数组
 		return adviceInvocationArgs;
 	}
 
