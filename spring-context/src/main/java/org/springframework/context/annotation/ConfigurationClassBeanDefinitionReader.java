@@ -135,14 +135,17 @@ class ConfigurationClassBeanDefinitionReader {
 		}
 
 		if (configClass.isImported()) {
+			// 如果是导入的配置类，先把自己的BeanDefinition注册到IOC容器中
 			registerBeanDefinitionForImportedConfigurationClass(configClass);
 		}
-		//被bean注解的方法解析为BeanDefinition注册到容器中
 		for (BeanMethod beanMethod : configClass.getBeanMethods()) {
+			// @Bean注解的方法封装成BeanDefinition并注册到IOC容器中
 			loadBeanDefinitionsForBeanMethod(beanMethod);
 		}
 
+		// 从@ImportResource导入的配置文件注册BeanDefinition
 		loadBeanDefinitionsFromImportedResources(configClass.getImportedResources());
+		// 从@Import导入的ImportBeanDefinitionRegistrar注册BeanDefinition
 		loadBeanDefinitionsFromRegistrars(configClass.getImportBeanDefinitionRegistrars());
 	}
 
@@ -169,6 +172,7 @@ class ConfigurationClassBeanDefinitionReader {
 	}
 
 	/**
+	 * 把{@link Bean}注解的方法解析成BeanDefinition，注册到IOC容器中
 	 * Read the given {@link BeanMethod}, registering bean definitions
 	 * with the BeanDefinitionRegistry based on its contents.
 	 */
@@ -209,22 +213,28 @@ class ConfigurationClassBeanDefinitionReader {
 			return;
 		}
 
+		// 创建BeanDefinition对象
 		ConfigurationClassBeanDefinition beanDef = new ConfigurationClassBeanDefinition(configClass, metadata, beanName);
 		beanDef.setSource(this.sourceExtractor.extractSource(metadata, configClass.getResource()));
 
+		// 如果是静态方法
 		if (metadata.isStatic()) {
 			// static @Bean method
+			// 设置beanClass/beanClassName 用于在bean初始化时调用
 			if (configClass.getMetadata() instanceof StandardAnnotationMetadata) {
 				beanDef.setBeanClass(((StandardAnnotationMetadata) configClass.getMetadata()).getIntrospectedClass());
 			}
 			else {
 				beanDef.setBeanClassName(configClass.getMetadata().getClassName());
 			}
+			// 设置FactoryMethodName
 			beanDef.setUniqueFactoryMethodName(methodName);
 		}
 		else {
 			// instance @Bean method
+			// 如果是非静态的方法，设置工厂类的beanName
 			beanDef.setFactoryBeanName(configClass.getBeanName());
+			// 设置FactoryMethodName
 			beanDef.setUniqueFactoryMethodName(methodName);
 		}
 
@@ -281,6 +291,7 @@ class ConfigurationClassBeanDefinitionReader {
 			logger.trace(String.format("Registering bean definition for @Bean method %s.%s()",
 					configClass.getMetadata().getClassName(), beanName));
 		}
+		// 把BeanDefinition注册到IOC容器中
 		this.registry.registerBeanDefinition(beanName, beanDefToRegister);
 	}
 
@@ -335,6 +346,11 @@ class ConfigurationClassBeanDefinitionReader {
 		return true;
 	}
 
+	/**
+	 * 通过{@link ImportResource} 注解信息加载注册BeanDefinition
+	 * @param importedResources
+	 * @return void
+	 **/
 	private void loadBeanDefinitionsFromImportedResources(
 			Map<String, Class<? extends BeanDefinitionReader>> importedResources) {
 
@@ -342,6 +358,7 @@ class ConfigurationClassBeanDefinitionReader {
 
 		importedResources.forEach((resource, readerClass) -> {
 			// Default reader selection necessary?
+			// 如果注解配置的Reader是默认的，根据文件类型去选择xml和groovy解析器
 			if (BeanDefinitionReader.class == readerClass) {
 				if (StringUtils.endsWithIgnoreCase(resource, ".groovy")) {
 					// When clearly asking for Groovy, that's what they'll get...
@@ -376,12 +393,19 @@ class ConfigurationClassBeanDefinitionReader {
 			}
 
 			// TODO SPR-6310: qualify relative path locations as done in AbstractContextLoader.modifyLocations
+			// 使用reader从文件中加载bean
 			reader.loadBeanDefinitions(resource);
 		});
 	}
 
+	/**
+	 * 从@Import导入的ImportBeanDefinitionRegistrar注册BeanDefinition
+	 * @param registrars
+	 * @return void
+	 **/
 	private void loadBeanDefinitionsFromRegistrars(Map<ImportBeanDefinitionRegistrar, AnnotationMetadata> registrars) {
 		registrars.forEach((registrar, metadata) ->
+				// 转换成BeanDefinition注册到IOC容器中
 				registrar.registerBeanDefinitions(metadata, this.registry, this.importBeanNameGenerator));
 	}
 

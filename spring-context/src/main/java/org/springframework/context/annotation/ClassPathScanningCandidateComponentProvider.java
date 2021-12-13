@@ -302,6 +302,7 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 
 
 	/**
+	 * 扫描包下面的类并包装成BeanDefinition
 	 * Scan the class path for candidate components.
 	 * @param basePackage the package to check for annotated classes
 	 * @return a corresponding Set of autodetected bean definitions
@@ -433,6 +434,11 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 		return candidates;
 	}
 
+	/**
+	 * 扫描包路径下的类并封装成BeanDefinition返回
+	 * @param basePackage
+	 * @return java.util.Set<org.springframework.beans.factory.config.BeanDefinition>
+	 **/
 	private Set<BeanDefinition> scanCandidateComponents(String basePackage) {
 		Set<BeanDefinition> candidates = new LinkedHashSet<>();
 		try {
@@ -454,11 +460,11 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 						//metadataReader对象中包含ClassMetadata类元信息和AnnotationMetadata注解元信息
 						// 也就是说根据 `.class` 文件就获取到了这个类的元信息，而不是在 JVM 运行时通过 Class 对象进行操作，提高性能
 						MetadataReader metadataReader = getMetadataReaderFactory().getMetadataReader(resource);
-						//根据所有的过滤器判断这个类是否符合条件（例如必须标注@component注解或其派生注解）
+						// 根据过滤器的规则去过滤文件
 						if (isCandidateComponent(metadataReader)) {
-							//如果符合条件，则创建一个ScannedGenericBeanDefinition对象
+							// 如果符合条件，则创建一个ScannedGenericBeanDefinition对象
 							ScannedGenericBeanDefinition sbd = new ScannedGenericBeanDefinition(metadataReader);
-							//来源是这个class文件资源
+							// 来源是这个class文件资源
 							sbd.setSource(resource);
 							/**
 							 * 再次判断这个类是否符合条件（不是内部类并且是一个具体类）

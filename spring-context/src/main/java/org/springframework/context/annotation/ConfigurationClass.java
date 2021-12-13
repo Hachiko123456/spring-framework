@@ -48,6 +48,9 @@ import org.springframework.util.ClassUtils;
  */
 final class ConfigurationClass {
 
+	/**
+	 * 配置类的注解信息
+	 */
 	private final AnnotationMetadata metadata;
 
 	private final Resource resource;
@@ -55,13 +58,25 @@ final class ConfigurationClass {
 	@Nullable
 	private String beanName;
 
+	/**
+	 * 当前类是从哪个配置类导入的
+	 */
 	private final Set<ConfigurationClass> importedBy = new LinkedHashSet<>(1);
 
+	/**
+	 * 这个配置类中被{@link Bean}注解标记的方法
+	 */
 	private final Set<BeanMethod> beanMethods = new LinkedHashSet<>();
 
+	/**
+	 * 配置类上的@ImportResource 注解中的信息，配置文件->对应的处理器Class
+	 */
 	private final Map<String, Class<? extends BeanDefinitionReader>> importedResources =
 			new LinkedHashMap<>();
 
+	/**
+	 * 配置类上的@Import注解导入的类，如果是实现了ImportBeanDefinitionRegistrar接口，将会被封装到这里
+	 */
 	private final Map<ImportBeanDefinitionRegistrar, AnnotationMetadata> importBeanDefinitionRegistrars =
 			new LinkedHashMap<>();
 
@@ -222,6 +237,11 @@ final class ConfigurationClass {
 		}
 	}
 
+	/**
+	 * 重写了equals方法，只要配置类的全类名相等就认为这两个对象一致
+	 * @param other
+	 * @return boolean
+	 **/
 	@Override
 	public boolean equals(@Nullable Object other) {
 		return (this == other || (other instanceof ConfigurationClass &&
