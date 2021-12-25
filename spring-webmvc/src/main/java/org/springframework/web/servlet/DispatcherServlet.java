@@ -968,7 +968,7 @@ public class DispatcherServlet extends FrameworkServlet {
 	 */
 	@Override
 	protected void doService(HttpServletRequest request, HttpServletResponse response) throws Exception {
-		//如果日志级别为DEBUG，则打印日志
+		// 如果日志级别为DEBUG，则打印日志
 		logRequest(request);
 
 		// Keep a snapshot of the request attributes in case of an include,
@@ -996,7 +996,7 @@ public class DispatcherServlet extends FrameworkServlet {
 		request.setAttribute(THEME_RESOLVER_ATTRIBUTE, this.themeResolver);
 		request.setAttribute(THEME_SOURCE_ATTRIBUTE, getThemeSource());
 
-		//FlashMap的相关配置
+		// FlashMap的相关配置
 		if (this.flashMapManager != null) {
 			FlashMap inputFlashMap = this.flashMapManager.retrieveAndUpdate(request, response);
 			if (inputFlashMap != null) {
@@ -1012,11 +1012,11 @@ public class DispatcherServlet extends FrameworkServlet {
 		}
 
 		try {
-			//执行请求的分发
+			// 执行请求的分发
 			doDispatch(request, response);
 		}
 		finally {
-			//异步处理
+			// 异步处理
 			if (!WebAsyncUtils.getAsyncManager(request).isConcurrentHandlingStarted()) {
 				// Restore the original attribute snapshot, in case of an include.
 				if (attributesSnapshot != null) {
@@ -1076,6 +1076,7 @@ public class DispatcherServlet extends FrameworkServlet {
 	 * @throws Exception in case of any kind of processing failure
 	 */
 	protected void doDispatch(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		// 真正的请求对象
 		HttpServletRequest processedRequest = request;
 		HandlerExecutionChain mappedHandler = null;
 		boolean multipartRequestParsed = false;
@@ -1096,7 +1097,7 @@ public class DispatcherServlet extends FrameworkServlet {
 				//获得请求对应的 HandlerExecutionChain 对象（HandlerMethod 和 HandlerInterceptor 拦截器们）
 				mappedHandler = getHandler(processedRequest);
 				if (mappedHandler == null) {
-					//处理找不到处理器的情况，404
+					// 处理找不到处理器的情况，404
 					noHandlerFound(processedRequest, response);
 					return;
 				}

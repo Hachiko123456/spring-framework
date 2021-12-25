@@ -607,18 +607,15 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 	class MappingRegistry {
 
 		/**
-		 * 注册表
+		 * 存储RequestMappingInfo到HandlerMethod的映射关系
 		 */
 		private final Map<T, MappingRegistration<T>> registry = new HashMap<>();
 
 		/**
-		 * 直接的URL映射
+		 * 直接的URL映射,数据结构用MultiValueMap，因为一个url可以映射到多个RequestMappingInfo
 		 */
 		private final MultiValueMap<String, T> pathLookup = new LinkedMultiValueMap<>();
 
-		/**
-		 * Mapping的名字与HandlerMethod的映射
-		 */
 		private final Map<String, List<HandlerMethod>> nameLookup = new ConcurrentHashMap<>();
 
 		private final Map<HandlerMethod, CorsConfiguration> corsLookup = new ConcurrentHashMap<>();

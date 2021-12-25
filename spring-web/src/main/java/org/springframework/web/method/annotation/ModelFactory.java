@@ -47,6 +47,8 @@ import org.springframework.web.method.support.InvocableHandlerMethod;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
 /**
+ * 保存了{@link ModelAttribute}以及{@link org.springframework.web.bind.annotation.SessionAttribute}的相关信息，
+ * 前者表现的形式是一个个{@link InvocableHandlerMethod},后者的表现形式是{@link SessionAttributesHandler}
  * Assist with initialization of the {@link Model} before controller method
  * invocation and with updates to it after the invocation.
  *
@@ -108,9 +110,12 @@ public final class ModelFactory {
 			throws Exception {
 
 		Map<String, ?> sessionAttributes = this.sessionAttributesHandler.retrieveAttributes(request);
+		// 将sessionAttributes的key-value复制到ModelAndViewContainer的ModelMap中
 		container.mergeAttributes(sessionAttributes);
+		// 把获取@ModelAttribute标注方法的返回值，并根据一定规则生成key，将key-value放入到container中
 		invokeModelAttributeMethods(request, container);
 
+		// 遍历这个handler中被@ModelAttribute标注并且在sessionAttributesHandler中定义的参数
 		for (String name : findSessionAttributeArguments(handlerMethod)) {
 			if (!container.containsAttribute(name)) {
 				Object value = this.sessionAttributesHandler.retrieveAttribute(request, name);
@@ -123,6 +128,7 @@ public final class ModelFactory {
 	}
 
 	/**
+	 * 遍历被@ModelAttribute注解的方法，并对它们进行调用，然后利用一定的名称生成规则生成key，并将key-value放入到container中
 	 * Invoke model attribute methods to populate the model.
 	 * Attributes are added only if not already present in the model.
 	 */
@@ -130,6 +136,7 @@ public final class ModelFactory {
 			throws Exception {
 
 		while (!this.modelMethods.isEmpty()) {
+			// 遍历被@ModelAttribute注解的方法
 			InvocableHandlerMethod modelMethod = getNextModelMethod(container).getHandlerMethod();
 			ModelAttribute ann = modelMethod.getMethodAnnotation(ModelAttribute.class);
 			Assert.state(ann != null, "No ModelAttribute annotation");
@@ -140,6 +147,7 @@ public final class ModelFactory {
 				continue;
 			}
 
+			// 调用被@ModelAttribute注解的方法，然后获取返回值
 			Object returnValue = modelMethod.invokeForRequest(request, container);
 			if (modelMethod.isVoid()) {
 				if (StringUtils.hasText(ann.value())) {
@@ -151,7 +159,9 @@ public final class ModelFactory {
 				continue;
 			}
 
+			// 根据一定规则生成key值(如果注解中有指定name，则用指定的name作为key)
 			String returnValueName = getNameForReturnValue(returnValue, modelMethod.getReturnType());
+			// 最后将key-value放入到container中
 			if (!ann.binding()) {
 				container.setBindingDisabled(returnValueName);
 			}

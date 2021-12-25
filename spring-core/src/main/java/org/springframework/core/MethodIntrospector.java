@@ -56,14 +56,19 @@ public final class MethodIntrospector {
 	 * or an empty map in case of no match
 	 */
 	public static <T> Map<Method, T> selectMethods(Class<?> targetType, final MetadataLookup<T> metadataLookup) {
+		// method -> RequestMappingInfo 的信息映射
 		final Map<Method, T> methodMap = new LinkedHashMap<>();
 		Set<Class<?>> handlerTypes = new LinkedHashSet<>();
+		// 如果targetType是JDK动态代理类，则specialHandlerType为null，否则为targetType的类型
 		Class<?> specificHandlerType = null;
 
+		// 如果不是JDK动态代理类
 		if (!Proxy.isProxyClass(targetType)) {
 			specificHandlerType = ClassUtils.getUserClass(targetType);
 			handlerTypes.add(specificHandlerType);
 		}
+
+		// 把实现的接口加入到集合中
 		handlerTypes.addAll(ClassUtils.getAllInterfacesForClassAsSet(targetType));
 
 		for (Class<?> currentHandlerType : handlerTypes) {
@@ -71,6 +76,7 @@ public final class MethodIntrospector {
 
 			ReflectionUtils.doWithMethods(currentHandlerType, method -> {
 				Method specificMethod = ClassUtils.getMostSpecificMethod(method, targetClass);
+				// 返回一个RequestMappingInfo
 				T result = metadataLookup.inspect(specificMethod);
 				if (result != null) {
 					Method bridgedMethod = BridgeMethodResolver.findBridgedMethod(specificMethod);

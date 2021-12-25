@@ -619,7 +619,6 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 			// support or the context injected at construction time had already been
 			// refreshed -> trigger initial onRefresh manually here.
 			synchronized (this.onRefreshMonitor) {
-				//这里调用的是DispatchServlet的onRefresh方法
 				onRefresh(wac);
 			}
 		}
@@ -1039,24 +1038,27 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 	protected final void processRequest(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 
-		//记录当前时间，用于计算处理请求花费的时间
+		// 记录当前时间，用于计算处理请求花费的时间
 		long startTime = System.currentTimeMillis();
-		//记录异常，用于保存处理请求过程中发送的异常
+		// 记录异常，用于保存处理请求过程中发送的异常
 		Throwable failureCause = null;
 
+		// 构造当前的语言环境
 		LocaleContext previousLocaleContext = LocaleContextHolder.getLocaleContext();
 		LocaleContext localeContext = buildLocaleContext(request);
 
+		// 根据request、response、RequestAttributes构造ServletRequestAttributes
 		RequestAttributes previousAttributes = RequestContextHolder.getRequestAttributes();
 		ServletRequestAttributes requestAttributes = buildRequestAttributes(request, response, previousAttributes);
 
 		WebAsyncManager asyncManager = WebAsyncUtils.getAsyncManager(request);
 		asyncManager.registerCallableInterceptor(FrameworkServlet.class.getName(), new RequestBindingInterceptor());
 
+		// 把当前语言环境和ServletRequestAttributes放入到ThreadLocal中，这样就能在请求的任意地方获取HTTPServletRequest对象了
 		initContextHolders(request, localeContext, requestAttributes);
 
 		try {
-			//执行真正的逻辑
+			// 执行真正的逻辑
 			doService(request, response);
 		}
 		catch (ServletException | IOException ex) {
@@ -1069,14 +1071,15 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 		}
 
 		finally {
+			// 把当前线程上下文ThreadLocal中的LocaleContext以及ServletRequestAttributes恢复到请求之前的状态
 			resetContextHolders(request, previousLocaleContext, previousAttributes);
 			if (requestAttributes != null) {
 				requestAttributes.requestCompleted();
 			}
-			//如果日志级别为DEBUG，则打印请求日志
+			// 如果日志级别为DEBUG，则打印请求日志
 			logResult(request, response, failureCause, asyncManager);
-			//发布ServletRequestHandledEvent 请求处理完成事件
-			//但是SpringMVC并没有监听器去处理该事件
+			// 发布ServletRequestHandledEvent 请求处理完成事件
+			// 但是SpringMVC并没有监听器去处理该事件
 			publishRequestHandledEvent(request, response, startTime, failureCause);
 		}
 	}

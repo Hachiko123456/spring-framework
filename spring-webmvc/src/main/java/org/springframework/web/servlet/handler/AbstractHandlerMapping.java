@@ -92,7 +92,7 @@ public abstract class AbstractHandlerMapping extends WebApplicationObjectSupport
 	private PathMatcher pathMatcher = new AntPathMatcher();
 
 	/**
-	 * 配置的拦截器数组.
+	 * 因为拦截器有很多种：HandlerInterceptor、WebRequestInterceptor、MappedInterceptor,所以要用Object来接收
 	 *
 	 * 在 {@link #initInterceptors()} 方法中，初始化到 {@link #adaptedInterceptors} 中
 	 *
@@ -385,17 +385,18 @@ public abstract class AbstractHandlerMapping extends WebApplicationObjectSupport
 
 
 	/**
+	 * 初始化容器，把所有的拦截器找出来并用适配器转为HandlerInterceptor类型
 	 * Initializes the interceptors.
 	 * @see #extendInterceptors(java.util.List)
 	 * @see #initInterceptors()
 	 */
 	@Override
 	protected void initApplicationContext() throws BeansException {
-		//模板方法，用于给子类提供处理interceptor的入口
+		// 模板方法，用于给子类提供处理interceptor的入口
 		extendInterceptors(this.interceptors);
-		//获取所有的MappedInterceptor bean并放到adaptedInterceptors中
+		// 获取所有的MappedInterceptor类型的bean
 		detectMappedInterceptors(this.adaptedInterceptors);
-		//将interceptors初始化HandlerInterceptor类型，添加到adaptedInterceptors中
+		// 对拦截器做适配，统一转为HandlerInterceptor保存
 		initInterceptors();
 	}
 
@@ -422,7 +423,7 @@ public abstract class AbstractHandlerMapping extends WebApplicationObjectSupport
 	 * @param mappedInterceptors an empty list to add to
 	 */
 	protected void detectMappedInterceptors(List<HandlerInterceptor> mappedInterceptors) {
-		//MappedInterceptor会根据请求路劲做匹配，是否进行拦截
+		// MappedInterceptor会根据请求路劲做匹配，是否进行拦截
 		mappedInterceptors.addAll(BeanFactoryUtils.beansOfTypeIncludingAncestors(
 				obtainApplicationContext(), MappedInterceptor.class, true, false).values());
 	}
@@ -448,7 +449,7 @@ public abstract class AbstractHandlerMapping extends WebApplicationObjectSupport
 	}
 
 	/**
-	 * 把interceptor转为HandlerInterceptor
+	 * interceptor适配器方法，把interceptor转为HandlerInterceptor类型
 	 * Adapt the given interceptor object to {@link HandlerInterceptor}.
 	 * <p>By default, the supported interceptor types are
 	 * {@link HandlerInterceptor} and {@link WebRequestInterceptor}. Each given

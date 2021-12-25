@@ -45,6 +45,7 @@ import java.lang.reflect.Type;
 import java.util.concurrent.Callable;
 
 /**
+ * InvocableHandlerMethod的子类，主要增加处理返回值的功能
  * Extends {@link InvocableHandlerMethod} with the ability to handle return
  * values through a registered {@link HandlerMethodReturnValueHandler} and
  * also supports setting the response status based on a method-level
@@ -64,6 +65,9 @@ public class ServletInvocableHandlerMethod extends InvocableHandlerMethod {
 
 	private static final Method CALLABLE_METHOD = ClassUtils.getMethod(Callable.class, "call");
 
+	/**
+	 * 处理返回值
+	 */
 	@Nullable
 	private HandlerMethodReturnValueHandlerComposite returnValueHandlers;
 
@@ -102,12 +106,12 @@ public class ServletInvocableHandlerMethod extends InvocableHandlerMethod {
 	public void invokeAndHandle(ServletWebRequest webRequest, ModelAndViewContainer mavContainer,
 			Object... providedArgs) throws Exception {
 
-		//解析当前请求的参数，并执行处理器的方法
+		// 解析当前请求的参数，并执行处理器的方法
 		Object returnValue = invokeForRequest(webRequest, mavContainer, providedArgs);
-		//设置状态码，通过@ResponseStatus注解
+		// 设置状态码，通过@ResponseStatus注解
 		setResponseStatus(webRequest);
 
-		//设置ModelAndViewContainer 为请求已处理，返回，和 @ResponseStatus 注解相关
+		// 设置ModelAndViewContainer 为请求已处理，返回，和 @ResponseStatus 注解相关
 		if (returnValue == null) {
 			if (isRequestNotModified(webRequest) || getResponseStatus() != null || mavContainer.isRequestHandled()) {
 				disableContentCachingIfNecessary(webRequest);
@@ -124,7 +128,7 @@ public class ServletInvocableHandlerMethod extends InvocableHandlerMethod {
 		mavContainer.setRequestHandled(false);
 		Assert.state(this.returnValueHandlers != null, "No return value handlers");
 		try {
-			//处理返回值
+			// 处理返回值
 			this.returnValueHandlers.handleReturnValue(
 					returnValue, getReturnValueType(returnValue), mavContainer, webRequest);
 		}

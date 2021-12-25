@@ -29,6 +29,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
+ * 在调用handler方法的过程中，可能会涉及到绑定参数，这些参数被放到了container中，
+ * 而参数的来源就是{@link org.springframework.web.bind.annotation.ModelAttribute}和{@link org.springframework.web.bind.annotation.SessionAttribute}
  * Records model and view related decisions made by
  * {@link HandlerMethodArgumentResolver HandlerMethodArgumentResolvers} and
  * {@link HandlerMethodReturnValueHandler HandlerMethodReturnValueHandlers} during the course of invocation of

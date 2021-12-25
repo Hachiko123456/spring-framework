@@ -294,7 +294,7 @@ public abstract class AbstractMethodMessageHandler<T>
 	/**
 	 * Detect if the given handler has any methods that can handle messages and if
 	 * so register it with the extracted mapping information.
-	 * @param handler the handler to check, either an instance of a Spring bean name
+	 * @param handler the handler to check, either an instance of a Spring bean name 说白了就是一个controller
 	 */
 	protected final void detectHandlerMethods(final Object handler) {
 		Class<?> handlerType;
@@ -309,11 +309,13 @@ public abstract class AbstractMethodMessageHandler<T>
 
 		if (handlerType != null) {
 			final Class<?> userType = ClassUtils.getUserClass(handlerType);
+			// 查询被@RequestMapping注解的方法，封装成RequestMappingInfo，跟方法组成映射
 			Map<Method, T> methods = MethodIntrospector.selectMethods(userType,
 					(MethodIntrospector.MetadataLookup<T>) method -> getMappingForMethod(method, userType));
 			if (logger.isDebugEnabled()) {
 				logger.debug(formatMappings(userType, methods));
 			}
+			// 注册HandlerMethod
 			methods.forEach((key, value) -> registerHandlerMethod(handler, key, value));
 		}
 	}
