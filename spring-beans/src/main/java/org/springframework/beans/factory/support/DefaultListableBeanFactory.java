@@ -1023,8 +1023,15 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
 		// Trigger initialization of all non-lazy singleton beans...
 		for (String beanName : beanNames) {
+			/**
+			 * 获取合并后的BeanDefinition，简单来说，因为BeanDefinition是可以存在继承关系的
+			 * 如果配置了父BeanDefinition，那么我们就需要去结合BeanDefinition的属性，生成一
+			 * 个新的合并后的BeanDefinition，子BeanDefinition会覆盖父BeanDefinition的属性
+			 */
 			RootBeanDefinition bd = getMergedLocalBeanDefinition(beanName);
+			// 非抽象的、单例的且非懒加载的才需要初始化
 			if (!bd.isAbstract() && bd.isSingleton() && !bd.isLazyInit()) {
+				// 处理FactoryBean
 				if (isFactoryBean(beanName)) {
 					Object bean = getBean(FACTORY_BEAN_PREFIX + beanName);
 					if (bean instanceof FactoryBean) {
@@ -1045,12 +1052,15 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 					}
 				}
 				else {
+					// 正常创建的普通bean会进入到这个逻辑，这里就把bean实例化并且管理起来
+					// 看方法名称可知道是获取一个bean，但是如果获取不到，会新建一个
 					getBean(beanName);
 				}
 			}
 		}
 
 		// Trigger post-initialization callback for all applicable beans...
+		// 调用SmartInitializingSingleton#afterSingletonsInstantiated钩子方法
 		for (String beanName : beanNames) {
 			Object singletonInstance = getSingleton(beanName);
 			if (singletonInstance instanceof SmartInitializingSingleton) {
