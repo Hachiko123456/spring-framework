@@ -19,6 +19,8 @@ package org.springframework.transaction;
 import java.io.Flushable;
 
 /**
+ * 事务状态，在嵌套事务下，每个字方法的事务可能不同，所以还得有一个子方法事务的状态{@link TransactionStatus}
+ * 用来存储当前事务的一些数据和状态，比如事务资源、回滚状态等等
  * Representation of the status of a transaction.
  *
  * <p>Transactional code can use this to retrieve status information,

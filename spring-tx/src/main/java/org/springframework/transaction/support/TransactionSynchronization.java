@@ -21,6 +21,7 @@ import java.io.Flushable;
 import org.springframework.core.Ordered;
 
 /**
+ * 事务同步回调
  * Interface for transaction synchronization callbacks.
  * Supported by AbstractPlatformTransactionManager.
  *
@@ -60,6 +61,7 @@ public interface TransactionSynchronization extends Ordered, Flushable {
 	}
 
 	/**
+	 * 挂起事务
 	 * Suspend this synchronization.
 	 * Supposed to unbind resources from TransactionSynchronizationManager if managing any.
 	 * @see TransactionSynchronizationManager#unbindResource
@@ -68,6 +70,7 @@ public interface TransactionSynchronization extends Ordered, Flushable {
 	}
 
 	/**
+	 * 唤醒事务
 	 * Resume this synchronization.
 	 * Supposed to rebind resources to TransactionSynchronizationManager if managing any.
 	 * @see TransactionSynchronizationManager#bindResource
@@ -85,6 +88,7 @@ public interface TransactionSynchronization extends Ordered, Flushable {
 	}
 
 	/**
+	 * 提交事务前
 	 * Invoked before transaction commit (before "beforeCompletion").
 	 * Can e.g. flush transactional O/R Mapping sessions to the database.
 	 * <p>This callback does <i>not</i> mean that the transaction will actually be committed.
@@ -102,6 +106,7 @@ public interface TransactionSynchronization extends Ordered, Flushable {
 	}
 
 	/**
+	 * 提交事务完成前
 	 * Invoked before transaction commit/rollback.
 	 * Can perform resource cleanup <i>before</i> transaction completion.
 	 * <p>This method will be invoked after {@code beforeCommit}, even when
@@ -116,6 +121,7 @@ public interface TransactionSynchronization extends Ordered, Flushable {
 	}
 
 	/**
+	 * 提交事务后
 	 * Invoked after transaction commit. Can perform further operations right
 	 * <i>after</i> the main transaction has <i>successfully</i> committed.
 	 * <p>Can e.g. commit further operations that are supposed to follow on a successful
@@ -134,6 +140,7 @@ public interface TransactionSynchronization extends Ordered, Flushable {
 	}
 
 	/**
+	 * 提交事务完成后
 	 * Invoked after transaction commit/rollback.
 	 * Can perform resource cleanup <i>after</i> transaction completion.
 	 * <p><b>NOTE:</b> The transaction will have been committed or rolled back already,

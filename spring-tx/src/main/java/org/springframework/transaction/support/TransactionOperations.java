@@ -23,6 +23,7 @@ import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.TransactionStatus;
 
 /**
+ * 事务操作接口
  * Interface specifying basic transaction execution operations.
  * Implemented by {@link TransactionTemplate}. Not often used directly,
  * but a useful option to enhance testability, as it can easily be
@@ -34,6 +35,7 @@ import org.springframework.transaction.TransactionStatus;
 public interface TransactionOperations {
 
 	/**
+	 * 带返回值的事务回调
 	 * Execute the action specified by the given callback object within a transaction.
 	 * <p>Allows for returning a result object created within the transaction, that is,
 	 * a domain object or a collection of domain objects. A RuntimeException thrown
@@ -49,6 +51,7 @@ public interface TransactionOperations {
 	<T> T execute(TransactionCallback<T> action) throws TransactionException;
 
 	/**
+	 * 不带返回值的事务回调
 	 * Execute the action specified by the given {@link Runnable} within a transaction.
 	 * <p>If you need to return an object from the callback or access the
 	 * {@link org.springframework.transaction.TransactionStatus} from within the callback,
