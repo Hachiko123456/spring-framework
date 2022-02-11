@@ -538,12 +538,12 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 
 			try {
 				// Allows post-processing of the bean factory in context subclasses.
-				//允许子类在所有的bean尚未初始化之前注册BeanPostProcessor,空实现且子类没有覆盖
+				// 允许子类在所有的bean尚未初始化之前注册BeanPostProcessor,空实现且子类没有覆盖
 				postProcessBeanFactory(beanFactory);
 
 				StartupStep beanPostProcess = this.applicationStartup.start("spring.context.beans.post-process");
 				// Invoke factory processors registered as beans in the context.
-				//调用BeanFactoryPostProcessor.postProcessBeanFactory方法和BeanDefinitionRegistryPostProcessor.postProcessBeanDefinitionRegistry
+				// 调用BeanFactoryPostProcessor.postProcessBeanFactory方法和BeanDefinitionRegistryPostProcessor.postProcessBeanDefinitionRegistry
 				invokeBeanFactoryPostProcessors(beanFactory);
 
 				// Register bean processors that intercept bean creation.
@@ -568,6 +568,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				registerListeners();
 
 				// Instantiate all remaining (non-lazy-init) singletons.
+				// 实例化所有非懒加载的bean
 				finishBeanFactoryInitialization(beanFactory);
 
 				// Last step: publish corresponding event.
@@ -883,7 +884,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 */
 	protected void finishBeanFactoryInitialization(ConfigurableListableBeanFactory beanFactory) {
 		// Initialize conversion service for this context.
-		//初始化ConversionService
+		// 初始化ConversionService
 		if (beanFactory.containsBean(CONVERSION_SERVICE_BEAN_NAME) &&
 				beanFactory.isTypeMatch(CONVERSION_SERVICE_BEAN_NAME, ConversionService.class)) {
 			beanFactory.setConversionService(
@@ -912,7 +913,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		beanFactory.freezeConfiguration();
 
 		// Instantiate all remaining (non-lazy-init) singletons.
-		//实例化所有剩余的(非lazy-init)单例
+		// 实例化所有剩余的非懒加载的bean
 		beanFactory.preInstantiateSingletons();
 	}
 

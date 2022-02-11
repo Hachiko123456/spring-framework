@@ -530,7 +530,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		try {
 			// Give BeanPostProcessors a chance to return a proxy instead of the target bean instance.
 			// 触发postProcessBeforeInitialization和postProcessAfterInstantiation方法
-			// 如果返回的non-null对象，那么直接中断bean的标准创建过程，直接返回该对象
+			// 给BeanPostProcessor一个机会，在我们的bean实例化之前返回一个代理对象，
+			// 如果返回的代理对象不为空，则直接中断bean的标准创建过程，直接返回该对象
 			Object bean = resolveBeforeInstantiation(beanName, mbdToUse);
 			if (bean != null) {
 				return bean;
@@ -542,7 +543,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		try {
-			//如果postProcessBeforeInitialization返回的对象为空，则继续执行标准的初始化bean过程
+			// 开始真正实例化bean的地方
 			Object beanInstance = doCreateBean(beanName, mbdToUse, args);
 			if (logger.isTraceEnabled()) {
 				logger.trace("Finished creating instance of bean '" + beanName + "'");
@@ -584,7 +585,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			instanceWrapper = this.factoryBeanInstanceCache.remove(beanName);
 		}
 		if (instanceWrapper == null) {
-			// 使用合适的实例化策略实例化bean对象，工厂方法，构造函数自动注入，简单初始化
+			// 创建bean实例
 			instanceWrapper = createBeanInstance(beanName, mbd, args);
 		}
 		Object bean = instanceWrapper.getWrappedInstance();
@@ -598,10 +599,10 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			if (!mbd.postProcessed) {
 				try {
 					/**
-					 * 对 RootBeanDefinition（合并后）进行加工处理
 					 * 调用所有 {@link MergedBeanDefinitionPostProcessor#postProcessMergedBeanDefinition}
-					 * 【重要】例如有下面两个处理器：
-					 * 1. AutowiredAnnotationBeanPostProcessor 会先解析出 @Autowired 和 @Value 注解标注的属性的注入元信息，后续进行依赖注入；
+					 * 调用时机为bean实例创建之后，依赖注入调用之前
+					 * 【重要】例如MergedBeanDefinitionPostProcessor有下面两个处理器：
+					 * 1. {@link org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor} 会先解析出 @Autowired 和 @Value 注解标注的属性的注入元信息，后续进行依赖注入；
 					 * 2. CommonAnnotationBeanPostProcessor 会先解析出 @Resource 注解标注的属性的注入元信息，后续进行依赖注入，
 					 * 它也会找到 @PostConstruct 和 @PreDestroy 注解标注的方法，并构建一个 LifecycleMetadata 对象，用于后续生命周期中的初始化和销毁
 					 */
@@ -625,18 +626,14 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				logger.trace("Eagerly caching bean '" + beanName +
 						"' to allow for resolving potential circular references");
 			}
-			/**
-			 * 在bean实例化后属性注入前暴露bean的引用，解决循环依赖问题
-			 * 当{@link AbstractBeanFactory#getBean(String)}调用{@link DefaultSingletonBeanRegistry#getSingleton(String)}时能获取到bean的引用
-			 * 这样就能解决单例的循环依赖问题
-			 */
+			// 加入三级缓存中
 			addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, mbd, bean));
 		}
 
 		// Initialize the bean instance.
 		Object exposedObject = bean;
 		try {
-			//填充bean的属性值
+			// 依赖注入
 			populateBean(beanName, mbd, instanceWrapper);
 			/**
 			 * 调用bean定义的初始化方法，对bean进行增强
@@ -694,6 +691,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		// Register bean as disposable.
 		try {
+			// 如果是单例bean，注册销毁事件
 			registerDisposableBeanIfNecessary(beanName, bean, mbd);
 		}
 		catch (BeanDefinitionValidationException ex) {
