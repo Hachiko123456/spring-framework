@@ -339,9 +339,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 */
 	@Override
 	public Object configureBean(Object existingBean, String beanName) throws BeansException {
-		//把bean加到已被创建bean的集合中，然后把能否重新合并标志位置为true
+		// 把bean加到已被创建bean的集合中，然后把能否重新合并标志位置为true
 		markBeanAsCreated(beanName);
-		//获取合并后的beanDefinition
+		// 获取合并后的beanDefinition
 		BeanDefinition mbd = getMergedBeanDefinition(beanName);
 		RootBeanDefinition bd = null;
 		if (mbd instanceof RootBeanDefinition) {
@@ -1237,6 +1237,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	/**
 	 * 用合适的策略去创建bean实例
 	 * 1.工厂方法、有参构造、无参构造
+	 * 2.args -> 显示传入的构造参数
 	 * Create a new instance for the specified bean, using an appropriate instantiation strategy:
 	 * factory method, constructor autowiring, or simple instantiation.
 	 * @param beanName the name of the bean
@@ -1259,7 +1260,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 					"Bean class isn't public, and non-public access not allowed: " + beanClass.getName());
 		}
 
-		// 尝试使用Supplier的get方法获取BeanObject
+		// spring提供给开发者的拓展点，如果我们要来自己实现创建对象的过程，那么就可以提供一个Supplier的实现类
 		Supplier<?> instanceSupplier = mbd.getInstanceSupplier();
 		if (instanceSupplier != null) {
 			return obtainFromSupplier(instanceSupplier, beanName);
@@ -1298,14 +1299,16 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		// Candidate constructors for autowiring?
-		// 根据bean的定义解析参数
+		/**
+		 * 获取{@link SmartInstantiationAwareBeanPostProcessor#determineCandidateConstructors}返回的构造器
+ 		 */
 		Constructor<?>[] ctors = determineConstructorsFromBeanPostProcessors(beanClass, beanName);
 		if (ctors != null// 前面已经找到了合适的构造方法
 				|| mbd.getResolvedAutowireMode() == AUTOWIRE_CONSTRUCTOR // 构造器注入
 				|| mbd.hasConstructorArgumentValues() // 定义了构造方法的入参
 				|| !ObjectUtils.isEmpty(args) // 当前方法指定了入参
 		) {
-			// 构造器注入
+			// 推断出多个构造器方法，在这里再进行一轮抉择
 			return autowireConstructor(beanName, mbd, ctors, args);
 		}
 

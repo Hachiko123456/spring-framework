@@ -285,6 +285,7 @@ public class MethodInvoker {
 
 
 	/**
+	 * 比较入参类型和方法定义类型的差异
 	 * Algorithm that judges the match between the declared parameter types of a candidate method
 	 * and a specific list of arguments that this method is supposed to be invoked with.
 	 * <p>Determines a weight that represents the class hierarchy difference between types and
@@ -307,6 +308,7 @@ public class MethodInvoker {
 	public static int getTypeDifferenceWeight(Class<?>[] paramTypes, Object[] args) {
 		int result = 0;
 		for (int i = 0; i < paramTypes.length; i++) {
+			// 1.如果参数类型不匹配，直接返回最大值
 			if (!ClassUtils.isAssignableValue(paramTypes[i], args[i])) {
 				return Integer.MAX_VALUE;
 			}
@@ -314,10 +316,12 @@ public class MethodInvoker {
 				Class<?> paramType = paramTypes[i];
 				Class<?> superClass = args[i].getClass().getSuperclass();
 				while (superClass != null) {
+					// 如果父类就是参数类型，则差异值+2
 					if (paramType.equals(superClass)) {
 						result = result + 2;
 						superClass = null;
 					}
+					// 如果父类类型是参数类型的子类，则差异值+2
 					else if (ClassUtils.isAssignable(paramType, superClass)) {
 						result = result + 2;
 						superClass = superClass.getSuperclass();
@@ -326,6 +330,7 @@ public class MethodInvoker {
 						superClass = null;
 					}
 				}
+				// 接口类型，差异值+1
 				if (paramType.isInterface()) {
 					result = result + 1;
 				}

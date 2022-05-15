@@ -236,7 +236,7 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 	}
 
 	/***
-	 * 查找需要注入的beanName的构造方法
+	 * 查找被{@link Autowired}注解的构造方法
 	 * @param beanClass
 	 * @param beanName
 	 * @return java.lang.reflect.Constructor<?>[]
@@ -282,13 +282,13 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 		}
 
 		// Quick check on the concurrent map first, with minimal locking.
-		//尝试从缓存中获取
+		// 尝试从缓存中获取
 		Constructor<?>[] candidateConstructors = this.candidateConstructorsCache.get(beanClass);
 		if (candidateConstructors == null) {
 			// Fully synchronized resolution now...
 			synchronized (this.candidateConstructorsCache) {
 				candidateConstructors = this.candidateConstructorsCache.get(beanClass);
-				//如果缓存中没有，则通过反射来获取
+				// 如果缓存中没有，则通过反射来获取
 				if (candidateConstructors == null) {
 					Constructor<?>[] rawCandidates;
 					try {
@@ -299,31 +299,32 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 								"Resolution of declared constructors on bean Class [" + beanClass.getName() +
 								"] from ClassLoader [" + beanClass.getClassLoader() + "] failed", ex);
 					}
+					// 被@Autowire标记的构造函数
 					List<Constructor<?>> candidates = new ArrayList<>(rawCandidates.length);
 					// @Autowired(required = true) 的构造函数,有且只能有一个
 					Constructor<?> requiredConstructor = null;
-					//默认的构造方法
+					// 默认的构造方法
 					Constructor<?> defaultConstructor = null;
-					//看命名好像是和Kotlin有关的东西，一般为null，不是很懂
+					// 和Kotlin有关
 					Constructor<?> primaryConstructor = BeanUtils.findPrimaryConstructor(beanClass);
 					int nonSyntheticConstructors = 0;
 					for (Constructor<?> candidate : rawCandidates) {
-						//构造函数是否非合成，一般我们自己创建的构造函数都是非合成的
+						// 构造函数是否非合成，一般我们自己创建的构造函数都是非合成的
 						if (!candidate.isSynthetic()) {
 							nonSyntheticConstructors++;
 						}
 						else if (primaryConstructor != null) {
 							continue;
 						}
-						//查找当前被@Autowire、@inject、@value注解修饰的构造函数
+						// 查找当前被@Autowire、@inject、@value注解修饰的构造函数
 						MergedAnnotation<?> ann = findAutowiredAnnotation(candidate);
 						if (ann == null) {
-							//如果未被修饰，这里判断是否为cglib的代理类，如果是则获取原始类，否则直接返回beanClass
+							// 获取父类
 							Class<?> userClass = ClassUtils.getUserClass(beanClass);
-							//如果这里不想等，则肯定是通过Cglib的代理类，userClass就是原始类
+							//如果这里不相等，则肯定是通过Cglib的代理类，userClass就是原始类
 							if (userClass != beanClass) {
 								try {
-									//再次查看是否被以上三个注解修饰
+									// 父类构造方法是否被@Autowire注解修饰
 									Constructor<?> superCtor =
 											userClass.getDeclaredConstructor(candidate.getParameterTypes());
 									ann = findAutowiredAnnotation(superCtor);
@@ -334,7 +335,7 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 							}
 						}
 						if (ann != null) {
-							//只能有一个requiredConstructor
+							// 只能有一个requiredConstructor
 							if (requiredConstructor != null) {
 								throw new BeanCreationException(beanName,
 										"Invalid autowire-marked constructor: " + candidate +
@@ -343,8 +344,8 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 							}
 							boolean required = determineRequiredStatus(ann);
 							if (required) {
-								//如果当前构造函数为必须注入，但是候选列表不为空，则说明已经有构造函数适配，则抛出异常
-								//require=true的构造函数不允许存在其他可注入的构造函数
+								// 如果当前构造函数为必须注入，但是候选列表不为空，则说明已经有构造函数适配，则抛出异常
+								// require=true的构造函数不允许存在其他可注入的构造函数
 								if (!candidates.isEmpty()) {
 									throw new BeanCreationException(beanName,
 											"Invalid autowire-marked constructors: " + candidates +
@@ -355,13 +356,15 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 							}
 							candidates.add(candidate);
 						}
-						//默认的构造函数
+						// 默认的构造函数
 						else if (candidate.getParameterCount() == 0) {
 							defaultConstructor = candidate;
 						}
 					}
+					// 找到被@Autowire标记的构造方法
 					if (!candidates.isEmpty()) {
 						// Add default constructor to list of optional constructors, as fallback.
+						// 如果都是@Autowire(require=false)，则把默认的构造方法都加到列表中
 						if (requiredConstructor == null) {
 							if (defaultConstructor != null) {
 								candidates.add(defaultConstructor);
@@ -376,16 +379,20 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 						candidateConstructors = candidates.toArray(new Constructor<?>[0]);
 					}
 					else if (rawCandidates.length == 1 && rawCandidates[0].getParameterCount() > 0) {
+						// 如果该类只有一个有参构造方法的情况下，spring则返回这个有参的构造方法
 						candidateConstructors = new Constructor<?>[] {rawCandidates[0]};
 					}
 					else if (nonSyntheticConstructors == 2 && primaryConstructor != null &&
 							defaultConstructor != null && !primaryConstructor.equals(defaultConstructor)) {
+						// 和Kotlin有关
 						candidateConstructors = new Constructor<?>[] {primaryConstructor, defaultConstructor};
 					}
 					else if (nonSyntheticConstructors == 1 && primaryConstructor != null) {
+						// 和Kotlin有关
 						candidateConstructors = new Constructor<?>[] {primaryConstructor};
 					}
 					else {
+						// 找不到构造参数
 						candidateConstructors = new Constructor<?>[0];
 					}
 					this.candidateConstructorsCache.put(beanClass, candidateConstructors);

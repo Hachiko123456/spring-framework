@@ -121,14 +121,14 @@ public class RootBeanDefinition extends AbstractBeanDefinition {
 
 	/** Package-visible field for caching the resolved constructor or factory method. */
 	/**
-	 * 已经解析的构造函数或是工厂方法，Executable是Method、Constructor类型的父类
+	 * 生成bean的构造方法或者工厂方法，Executable是Method、Constructor类型的父类
 	 */
 	@Nullable
 	Executable resolvedConstructorOrFactoryMethod;
 
 	/** Package-visible field that marks the constructor arguments as resolved. */
 	/**
-	 * 构造函数参数是否解析完毕
+	 * 构造函数对应的参数是否解析完毕
 	 */
 	boolean constructorArgumentsResolved = false;
 

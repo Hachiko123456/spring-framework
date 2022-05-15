@@ -1466,13 +1466,14 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 				}
 			}
 
-			//3.集合依赖，如ArrayList,List,Set,Map。内部查找依赖也是使用findAutowireCandidates
+			//3.对ArrayList,List,Set,Map等集合类型参数解析
 			Object multipleBeans = resolveMultipleBeans(descriptor, beanName, autowiredBeanNames, typeConverter);
 			if (multipleBeans != null) {
 				return multipleBeans;
 			}
 
-			//4.单个依赖查询
+			//4.对普通bean的形参类型赋值
+			// 根据class类型查找bean，返回的matchingBeans key是实例的beanName，value是class
 			Map<String, Object> matchingBeans = findAutowireCandidates(beanName, type, descriptor);
 			//4.1没有查找到依赖
 			if (matchingBeans.isEmpty()) {
@@ -1503,9 +1504,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 				}
 				instanceCandidate = matchingBeans.get(autowiredBeanName);
 			}
-			//只有一个，唯一匹配
 			else {
 				// We have exactly one match.
+				// 只有一个合适的bean
 				Map.Entry<String, Object> entry = matchingBeans.entrySet().iterator().next();
 				autowiredBeanName = entry.getKey();
 				instanceCandidate = entry.getValue();
@@ -1514,7 +1515,11 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			if (autowiredBeanNames != null) {
 				autowiredBeanNames.add(autowiredBeanName);
 			}
+			// 如果是class，则从bean工厂获得bean实例
 			if (instanceCandidate instanceof Class) {
+				/**
+				 * 调用的是 {@link BeanFactory#getBean}
+				 */
 				instanceCandidate = descriptor.resolveCandidate(autowiredBeanName, type, this);
 			}
 			Object result = instanceCandidate;

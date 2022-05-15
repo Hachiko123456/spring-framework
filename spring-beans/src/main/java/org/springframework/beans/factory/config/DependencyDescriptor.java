@@ -42,6 +42,10 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
 /**
+ * 依赖描述符，包含了自己所描述的注入点信息，除此之外，它还包含了其他一些信息
+ * 1.依赖是否必要 require
+ * 2.是否饥饿加载 eager
+ * 3.嵌套级别 nestingLevel
  * Descriptor for a specific dependency that is about to be injected.
  * Wraps a constructor parameter, a method parameter or a field,
  * allowing unified access to their metadata.
@@ -52,25 +56,52 @@ import org.springframework.util.ObjectUtils;
 @SuppressWarnings("serial")
 public class DependencyDescriptor extends InjectionPoint implements Serializable {
 
+	/**
+	 * 成员属性或者成员方法的某个参数所在的声明类
+	 */
 	private final Class<?> declaringClass;
 
+	/**
+	 * 如果包装依赖是成员方法的某个参数，则这里记录该成员方法的名称
+	 */
 	@Nullable
 	private String methodName;
 
+	/**
+	 * 如果包装的是成员方法的某个参数，则这里记录该参数的类型
+	 */
 	@Nullable
 	private Class<?>[] parameterTypes;
 
+	/**
+	 * 如果所包装的是成员方法的某个参数，则这里记录该参数在该函数参数列表中的索引
+	 */
 	private int parameterIndex;
 
+	/**
+	 * 如果所包装的是成员属性，则这里记录该成员属性的名称
+	 */
 	@Nullable
 	private String fieldName;
 
+	/**
+	 * 是否必要
+	 */
 	private final boolean required;
 
+	/**
+	 * 是否需要饥饿加载
+	 */
 	private final boolean eager;
 
+	/**
+	 * 嵌套级别
+	 */
 	private int nestingLevel = 1;
 
+	/**
+	 * 依赖的包含者类，通常和声明类是同一个
+	 */
 	@Nullable
 	private Class<?> containingClass;
 

@@ -43,6 +43,9 @@ import org.springframework.util.ObjectUtils;
  */
 public class ConstructorArgumentValues {
 
+	/**
+	 * 参数列表
+	 */
 	private final Map<Integer, ValueHolder> indexedArgumentValues = new LinkedHashMap<>();
 
 	private final List<ValueHolder> genericArgumentValues = new ArrayList<>();
@@ -265,6 +268,7 @@ public class ConstructorArgumentValues {
 	}
 
 	/**
+	 * 获取类型或者名称匹配的参数，需要排查那些已经在匹配过程中的参数
 	 * Look for the next generic argument value that matches the given type,
 	 * ignoring argument values that have already been used in the current
 	 * resolution process.
@@ -281,17 +285,21 @@ public class ConstructorArgumentValues {
 			@Nullable Set<ValueHolder> usedValueHolders) {
 
 		for (ValueHolder valueHolder : this.genericArgumentValues) {
+			// 已经在匹配过程中，跳过
 			if (usedValueHolders != null && usedValueHolders.contains(valueHolder)) {
 				continue;
 			}
+			// 名称不匹配，跳过
 			if (valueHolder.getName() != null && (requiredName == null ||
 					(!requiredName.isEmpty() && !requiredName.equals(valueHolder.getName())))) {
 				continue;
 			}
+			// 类型不匹配，跳过
 			if (valueHolder.getType() != null && (requiredType == null ||
 					!ClassUtils.matchesTypeName(requiredType, valueHolder.getType()))) {
 				continue;
 			}
+			// 类型之间没有派生关系，跳过
 			if (requiredType != null && valueHolder.getType() == null && valueHolder.getName() == null &&
 					!ClassUtils.isAssignableValue(requiredType, valueHolder.getValue())) {
 				continue;

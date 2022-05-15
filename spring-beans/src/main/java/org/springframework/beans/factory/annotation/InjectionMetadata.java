@@ -71,8 +71,14 @@ public class InjectionMetadata {
 
 	private static final Log logger = LogFactory.getLog(InjectionMetadata.class);
 
+	/**
+	 * 需要被注入的方法或属性所在的class对象
+	 */
 	private final Class<?> targetClass;
 
+	/**
+	 * 所有需要被注入的方法或属性
+	 */
 	private final Collection<InjectedElement> injectedElements;
 
 	@Nullable
@@ -173,6 +179,7 @@ public class InjectionMetadata {
 
 
 	/**
+	 * 对一个方法或者属性的封装
 	 * A single injected element.
 	 */
 	public abstract static class InjectedElement {

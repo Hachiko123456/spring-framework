@@ -27,7 +27,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 
 /**
- * 普通方法、构造方法的方法参数以及属性值的简单描述器
+ * 1.一个实例方法的某个参数及该参数的注解信息
+ * 2.实例成员属性以及该属性上的注解信息
  * A simple descriptor for an injection point, pointing to a method/constructor
  * parameter or a field. Exposed by {@link UnsatisfiedDependencyException}.
  * Also available as an argument for factory methods, reacting to the
@@ -40,12 +41,21 @@ import java.lang.reflect.Member;
  */
 public class InjectionPoint {
 
+	/**
+	 * 实例方法的参数信息
+	 */
 	@Nullable
 	protected MethodParameter methodParameter;
 
+	/**
+	 * 实例成员属性信息
+	 */
 	@Nullable
 	protected Field field;
 
+	/**
+	 * 注解信息
+	 */
 	@Nullable
 	private volatile Annotation[] fieldAnnotations;
 
