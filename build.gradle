@@ -1,6 +1,6 @@
 plugins {
 	id 'io.spring.dependency-management' version '1.0.9.RELEASE' apply false
-	id 'io.spring.nohttp' version '0.0.5.RELEASE'
+//	id 'io.spring.nohttp' version '0.0.5.RELEASE'
 	id 'org.jetbrains.kotlin.jvm' version '1.5.10' apply false
 	id 'org.jetbrains.dokka' version '0.10.1' apply false
 	id 'org.asciidoctor.jvm.convert' version '3.1.0'
@@ -289,6 +289,7 @@ configure(allprojects) { project ->
 		}
 		repositories {
 			mavenCentral()
+			maven { url "https://maven.aliyun.com/repository/central" }
 			maven { url "https://repo.spring.io/libs-spring-framework-build" }
 		}
 	}
@@ -391,25 +392,25 @@ configure(rootProject) {
 
 	apply plugin: "groovy"
 	apply plugin: "kotlin"
-	apply plugin: "io.spring.nohttp"
+//	apply plugin: "io.spring.nohttp"
 	apply plugin: 'org.springframework.build.api-diff'
 	apply from: "${rootDir}/gradle/publications.gradle"
 	apply from: "${rootDir}/gradle/docs.gradle"
 
-	nohttp {
-		source.exclude "**/test-output/**"
-		allowlistFile = project.file("src/nohttp/allowlist.lines")
-		def rootPath = file(rootDir).toPath()
-		def projectDirs = allprojects.collect { it.projectDir } + "${rootDir}/buildSrc"
-		projectDirs.forEach { dir ->
-			[ 'bin', 'build', 'out', '.settings' ]
-				.collect { rootPath.relativize(new File(dir, it).toPath()) }
-				.forEach { source.exclude "$it/**" }
-			[ '.classpath', '.project' ]
-				.collect { rootPath.relativize(new File(dir, it).toPath()) }
-				.forEach { source.exclude "$it" }
-		}
-	}
+//	nohttp {
+//		source.exclude "**/test-output/**"
+//		allowlistFile = project.file("src/nohttp/allowlist.lines")
+//		def rootPath = file(rootDir).toPath()
+//		def projectDirs = allprojects.collect { it.projectDir } + "${rootDir}/buildSrc"
+//		projectDirs.forEach { dir ->
+//			[ 'bin', 'build', 'out', '.settings' ]
+//				.collect { rootPath.relativize(new File(dir, it).toPath()) }
+//				.forEach { source.exclude "$it/**" }
+//			[ '.classpath', '.project' ]
+//				.collect { rootPath.relativize(new File(dir, it).toPath()) }
+//				.forEach { source.exclude "$it" }
+//		}
+//	}
 
 	publishing {
 		publications {
