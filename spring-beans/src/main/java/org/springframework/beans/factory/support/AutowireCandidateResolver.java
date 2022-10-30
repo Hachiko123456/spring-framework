@@ -32,6 +32,7 @@ import org.springframework.lang.Nullable;
 public interface AutowireCandidateResolver {
 
 	/**
+	 * 判断bean是否允许被依赖注入
 	 * Determine whether the given bean definition qualifies as an
 	 * autowire candidate for the given dependency.
 	 * <p>The default implementation checks
@@ -46,6 +47,7 @@ public interface AutowireCandidateResolver {
 	}
 
 	/**
+	 * 依赖是否是必须的
 	 * Determine whether the given descriptor is effectively required.
 	 * <p>The default implementation checks {@link DependencyDescriptor#isRequired()}.
 	 * @param descriptor the descriptor for the target method parameter or field

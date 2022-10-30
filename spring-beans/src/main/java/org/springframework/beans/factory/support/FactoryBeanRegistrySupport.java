@@ -48,6 +48,7 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 
 
 	/**
+	 * 获取FactoryBean对应的Bean类型
 	 * Determine the type for the given FactoryBean.
 	 * @param factoryBean the FactoryBean instance to check
 	 * @return the FactoryBean's object type,
@@ -85,6 +86,7 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 	}
 
 	/**
+	 * 从FactoryBean中获取Bean实例
 	 * Obtain an object to expose from the given FactoryBean.
 	 * @param factory the FactoryBean instance
 	 * @param beanName the name of the bean

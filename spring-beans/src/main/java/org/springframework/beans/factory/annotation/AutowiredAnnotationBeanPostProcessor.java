@@ -320,6 +320,7 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 						else if (primaryConstructor != null) {
 							continue;
 						}
+						// 查看构造方法是否被@Autowire注解
 						MergedAnnotation<?> ann = findAutowiredAnnotation(candidate);
 						if (ann == null) {
 							Class<?> userClass = ClassUtils.getUserClass(beanClass);
@@ -459,6 +460,11 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 		return metadata;
 	}
 
+	/**
+	 * 查找属性和方法上的@Autowire注解
+	 * @param clazz
+	 * @return org.springframework.beans.factory.annotation.InjectionMetadata
+	 **/
 	private InjectionMetadata buildAutowiringMetadata(final Class<?> clazz) {
 		if (!AnnotationUtils.isCandidateClass(clazz, this.autowiredAnnotationTypes)) {
 			return InjectionMetadata.EMPTY;
@@ -470,6 +476,7 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 		do {
 			final List<InjectionMetadata.InjectedElement> currElements = new ArrayList<>();
 
+			// 查找被@Autowire注解的参数
 			ReflectionUtils.doWithLocalFields(targetClass, field -> {
 				MergedAnnotation<?> ann = findAutowiredAnnotation(field);
 				if (ann != null) {
@@ -484,6 +491,7 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 				}
 			});
 
+			// 查找被@Autowire注解的方法
 			ReflectionUtils.doWithLocalMethods(targetClass, method -> {
 				Method bridgedMethod = BridgeMethodResolver.findBridgedMethod(method);
 				if (!BridgeMethodResolver.isVisibilityBridgeMethodPair(method, bridgedMethod)) {
@@ -607,6 +615,7 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 
 
 	/**
+	 * 属性注入
 	 * Class representing injection information about an annotated field.
 	 */
 	private class AutowiredFieldElement extends InjectionMetadata.InjectedElement {
@@ -639,6 +648,7 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 			else {
 				value = resolveFieldValue(field, bean, beanName);
 			}
+			// 直接通过反射设值
 			if (value != null) {
 				ReflectionUtils.makeAccessible(field);
 				field.set(bean, value);
@@ -654,11 +664,13 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 			TypeConverter typeConverter = beanFactory.getTypeConverter();
 			Object value;
 			try {
+				// 解决bean的依赖项
 				value = beanFactory.resolveDependency(desc, beanName, autowiredBeanNames, typeConverter);
 			}
 			catch (BeansException ex) {
 				throw new UnsatisfiedDependencyException(null, beanName, new InjectionPoint(field), ex);
 			}
+			// 缓存
 			synchronized (this) {
 				if (!this.cached) {
 					Object cachedFieldValue = null;
@@ -684,6 +696,7 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 
 
 	/**
+	 * 方法注入
 	 * Class representing injection information about an annotated method.
 	 */
 	private class AutowiredMethodElement extends InjectionMetadata.InjectedElement {
@@ -721,6 +734,7 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 			}
 			if (arguments != null) {
 				try {
+					// 直接通过反射调用
 					ReflectionUtils.makeAccessible(method);
 					method.invoke(bean, arguments);
 				}

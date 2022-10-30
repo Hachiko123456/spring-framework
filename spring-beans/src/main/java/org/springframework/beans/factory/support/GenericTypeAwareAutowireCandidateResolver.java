@@ -31,6 +31,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
 /**
+ * 根据范型类型进行匹配
  * Basic {@link AutowireCandidateResolver} that performs a full generic type
  * match with the candidate's type if the dependency is declared as a generic type
  * (e.g. Repository&lt;Customer&gt;).
@@ -86,6 +87,7 @@ public class GenericTypeAwareAutowireCandidateResolver extends SimpleAutowireCan
 		if (bdHolder.getBeanDefinition() instanceof RootBeanDefinition) {
 			rbd = (RootBeanDefinition) bdHolder.getBeanDefinition();
 		}
+		// 查看工厂方法解析的类型是否和dependencyType相匹配
 		if (rbd != null) {
 			targetType = rbd.targetType;
 			if (targetType == null) {
@@ -104,6 +106,7 @@ public class GenericTypeAwareAutowireCandidateResolver extends SimpleAutowireCan
 			}
 		}
 
+		// 非工厂方法创建，通过beanFactory#getType或者AbstractBeanDefinition#getBeanClass获取Class类型
 		if (targetType == null) {
 			// Regular case: straight bean instance, with BeanFactory available.
 			if (this.beanFactory != null) {

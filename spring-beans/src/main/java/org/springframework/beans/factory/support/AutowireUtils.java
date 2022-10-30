@@ -121,6 +121,7 @@ abstract class AutowireUtils {
 	}
 
 	/**
+	 * 处理ObjectFactory情况
 	 * Resolve the given autowiring value against the given required type,
 	 * e.g. an {@link ObjectFactory} value to its actual object result.
 	 * @param autowiringValue the value to resolve
@@ -130,6 +131,8 @@ abstract class AutowireUtils {
 	public static Object resolveAutowiringValue(Object autowiringValue, Class<?> requiredType) {
 		if (autowiringValue instanceof ObjectFactory && !requiredType.isInstance(autowiringValue)) {
 			ObjectFactory<?> factory = (ObjectFactory<?>) autowiringValue;
+			// 如果需要注入的类型是一个接口，则通过jdk动态代理的方式去注入
+			// Spring MVC里面就设置了ServletRequest->RequestObjectFactory
 			if (autowiringValue instanceof Serializable && requiredType.isInterface()) {
 				autowiringValue = Proxy.newProxyInstance(requiredType.getClassLoader(),
 						new Class<?>[] {requiredType}, new ObjectFactoryDelegatingInvocationHandler(factory));

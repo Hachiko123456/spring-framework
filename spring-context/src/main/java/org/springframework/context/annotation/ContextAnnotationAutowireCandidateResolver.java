@@ -74,6 +74,13 @@ public class ContextAnnotationAutowireCandidateResolver extends QualifierAnnotat
 		return false;
 	}
 
+	/**
+	 * 通过动态代理的方式去解决延迟初始化，如果有延迟初始化，先注入一个代理对象，等到真正使用了这个对象的时候，再通过
+	 * {@link TargetSource#getTarget()}的方式去通过IOC容器初始化
+	 * @param descriptor
+	 * @param beanName
+	 * @return java.lang.Object
+	 **/
 	protected Object buildLazyResolutionProxy(final DependencyDescriptor descriptor, final @Nullable String beanName) {
 		BeanFactory beanFactory = getBeanFactory();
 		Assert.state(beanFactory instanceof DefaultListableBeanFactory,
