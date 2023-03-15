@@ -126,7 +126,9 @@ class ConstructorResolver {
 		BeanWrapperImpl bw = new BeanWrapperImpl();
 		this.beanFactory.initBeanWrapper(bw);
 
+		// 需要用到的构造方法
 		Constructor<?> constructorToUse = null;
+		// 构造方法参数持有器
 		ArgumentsHolder argsHolderToUse = null;
 		// 构造器所需参数
 		Object[] argsToUse = null;
@@ -171,7 +173,7 @@ class ConstructorResolver {
 				}
 			}
 
-			// 只有一个无参构造器，那就直接使用该构造器
+			// 只有一个无参构造器，且没有指定构造器参数，那就直接使用该构造器
 			if (candidates.length == 1 && explicitArgs == null && !mbd.hasConstructorArgumentValues()) {
 				Constructor<?> uniqueCandidate = candidates[0];
 				if (uniqueCandidate.getParameterCount() == 0) {
@@ -707,6 +709,7 @@ class ConstructorResolver {
 
 		int minNrOfArgs = cargs.getArgumentCount();
 
+		// 解析非范型参数
 		for (Map.Entry<Integer, ConstructorArgumentValues.ValueHolder> entry : cargs.getIndexedArgumentValues().entrySet()) {
 			int index = entry.getKey();
 			if (index < 0) {
@@ -721,6 +724,7 @@ class ConstructorResolver {
 				resolvedValues.addIndexedArgumentValue(index, valueHolder);
 			}
 			else {
+				// 解析参数
 				Object resolvedValue =
 						valueResolver.resolveValueIfNecessary("constructor argument", valueHolder.getValue());
 				ConstructorArgumentValues.ValueHolder resolvedValueHolder =
@@ -730,6 +734,7 @@ class ConstructorResolver {
 			}
 		}
 
+		// 解析范型参数
 		for (ConstructorArgumentValues.ValueHolder valueHolder : cargs.getGenericArgumentValues()) {
 			if (valueHolder.isConverted()) {
 				resolvedValues.addGenericArgumentValue(valueHolder);
@@ -821,7 +826,7 @@ class ConstructorResolver {
 							"] - did you specify the correct bean references as arguments?");
 				}
 				try {
-					// 把参数对象注入到IOC容器中
+					// 通过IOC容器来解析参数
 					Object autowiredArgument = resolveAutowiredArgument(
 							methodParam, beanName, autowiredBeanNames, converter, fallback);
 					args.rawArguments[paramIndex] = autowiredArgument;

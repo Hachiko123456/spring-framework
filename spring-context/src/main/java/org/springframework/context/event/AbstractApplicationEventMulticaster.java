@@ -202,6 +202,7 @@ public abstract class AbstractApplicationEventMulticaster
 					(ClassUtils.isCacheSafe(event.getClass(), this.beanClassLoader) &&
 							(sourceType == null || ClassUtils.isCacheSafe(sourceType, this.beanClassLoader)))) {
 				newRetriever = new CachedListenerRetriever();
+				// 如果存在cacheKey对应的value，则existingRetriever!=null，否则existingRetriever为null
 				existingRetriever = this.retrieverCache.putIfAbsent(cacheKey, newRetriever);
 				if (existingRetriever != null) {
 					newRetriever = null;  // no need to populate it in retrieveApplicationListeners
@@ -222,6 +223,7 @@ public abstract class AbstractApplicationEventMulticaster
 	}
 
 	/**
+	 * 根据事件类型获取其对应的监听器列表
 	 * Actually retrieve the application listeners for the given event and source type.
 	 * @param eventType the event type
 	 * @param sourceType the event source type
@@ -244,7 +246,9 @@ public abstract class AbstractApplicationEventMulticaster
 
 		// Add programmatically registered listeners, including ones coming
 		// from ApplicationListenerDetector (singleton beans and inner beans).
+		// 遍历监听器对象列表
 		for (ApplicationListener<?> listener : listeners) {
+			// 如果监听器监听了该事件，加入列表
 			if (supportsEvent(listener, eventType, sourceType)) {
 				if (retriever != null) {
 					filteredListeners.add(listener);
@@ -255,6 +259,7 @@ public abstract class AbstractApplicationEventMulticaster
 
 		// Add listeners by bean name, potentially overlapping with programmatically
 		// registered listeners above - but here potentially with additional metadata.
+		// 遍历监听器bean名称列表，先实例化bean，再检测监听器是否监听了该事件
 		if (!listenerBeans.isEmpty()) {
 			ConfigurableBeanFactory beanFactory = getBeanFactory();
 			for (String listenerBeanName : listenerBeans) {
@@ -292,7 +297,9 @@ public abstract class AbstractApplicationEventMulticaster
 			}
 		}
 
+		// 监听器排序
 		AnnotationAwareOrderComparator.sort(allListeners);
+		// 缓存事件对应的监听器列表
 		if (retriever != null) {
 			if (filteredListenerBeans.isEmpty()) {
 				retriever.applicationListeners = new LinkedHashSet<>(allListeners);
@@ -303,6 +310,7 @@ public abstract class AbstractApplicationEventMulticaster
 				retriever.applicationListenerBeans = filteredListenerBeans;
 			}
 		}
+		// 返回事件对应的监听器列表
 		return allListeners;
 	}
 

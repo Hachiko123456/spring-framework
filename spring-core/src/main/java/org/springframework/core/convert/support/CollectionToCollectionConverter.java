@@ -81,10 +81,12 @@ final class CollectionToCollectionConverter implements ConditionalGenericConvert
 		Collection<Object> target = CollectionFactory.createCollection(targetType.getType(),
 				(elementDesc != null ? elementDesc.getType() : null), sourceCollection.size());
 
+		// 没有指定类型，就全部默认为Object类型
 		if (elementDesc == null) {
 			target.addAll(sourceCollection);
 		}
 		else {
+			// 通过ConversionService去执行类型转换操作
 			for (Object sourceElement : sourceCollection) {
 				Object targetElement = this.conversionService.convert(sourceElement,
 						sourceType.elementTypeDescriptor(sourceElement), elementDesc);
