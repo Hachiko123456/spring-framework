@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2016 the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -48,6 +48,8 @@ package org.springframework.test.context;
  * ServletTestExecutionListener}</li>
  * <li>{@link org.springframework.test.context.support.DirtiesContextBeforeModesTestExecutionListener
  * DirtiesContextBeforeModesTestExecutionListener}</li>
+ * <li>{@link org.springframework.test.context.event.ApplicationEventsTestExecutionListener
+ * ApplicationEventsTestExecutionListener}</li>
  * <li>{@link org.springframework.test.context.support.DependencyInjectionTestExecutionListener
  * DependencyInjectionTestExecutionListener}</li>
  * <li>{@link org.springframework.test.context.support.DirtiesContextTestExecutionListener
@@ -56,11 +58,14 @@ package org.springframework.test.context;
  * TransactionalTestExecutionListener}</li>
  * <li>{@link org.springframework.test.context.jdbc.SqlScriptsTestExecutionListener
  * SqlScriptsTestExecutionListener}</li>
+ * <li>{@link org.springframework.test.context.event.EventPublishingTestExecutionListener
+ * EventPublishingTestExecutionListener}</li>
  * </ul>
  *
  * @author Sam Brannen
  * @author Juergen Hoeller
  * @since 2.5
+ * @see TestExecutionListeners @TestExecutionListeners
  * @see TestContextManager
  * @see org.springframework.test.context.support.AbstractTestExecutionListener
  */
@@ -78,7 +83,6 @@ public interface TestExecutionListener {
 	 * @since 3.0
 	 */
 	default void beforeTestClass(TestContext testContext) throws Exception {
-		/* no-op */
 	}
 
 	/**
@@ -92,7 +96,6 @@ public interface TestExecutionListener {
 	 * @throws Exception allows any exception to propagate
 	 */
 	default void prepareTestInstance(TestContext testContext) throws Exception {
-		/* no-op */
 	}
 
 	/**
@@ -116,7 +119,6 @@ public interface TestExecutionListener {
 	 * @see #afterTestExecution
 	 */
 	default void beforeTestMethod(TestContext testContext) throws Exception {
-		/* no-op */
 	}
 
 	/**
@@ -137,7 +139,6 @@ public interface TestExecutionListener {
 	 * @see #afterTestExecution
 	 */
 	default void beforeTestExecution(TestContext testContext) throws Exception {
-		/* no-op */
 	}
 
 	/**
@@ -158,7 +159,6 @@ public interface TestExecutionListener {
 	 * @see #beforeTestExecution
 	 */
 	default void afterTestExecution(TestContext testContext) throws Exception {
-		/* no-op */
 	}
 
 	/**
@@ -182,7 +182,6 @@ public interface TestExecutionListener {
 	 * @see #afterTestExecution
 	 */
 	default void afterTestMethod(TestContext testContext) throws Exception {
-		/* no-op */
 	}
 
 	/**
@@ -197,7 +196,6 @@ public interface TestExecutionListener {
 	 * @since 3.0
 	 */
 	default void afterTestClass(TestContext testContext) throws Exception {
-		/* no-op */
 	}
 
 }

@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,6 +21,7 @@ import org.springframework.beans.factory.config.DependencyDescriptor;
 import org.springframework.lang.Nullable;
 
 /**
+ * 适配器形势存在，不能直接使用
  * {@link AutowireCandidateResolver} implementation to use when no annotation
  * support is available. This implementation checks the bean definition only.
  *
@@ -29,6 +30,13 @@ import org.springframework.lang.Nullable;
  * @since 2.5
  */
 public class SimpleAutowireCandidateResolver implements AutowireCandidateResolver {
+
+	/**
+	 * Shared instance of {@code SimpleAutowireCandidateResolver}.
+	 * @since 5.2.7
+	 */
+	public static final SimpleAutowireCandidateResolver INSTANCE = new SimpleAutowireCandidateResolver();
+
 
 	@Override
 	public boolean isAutowireCandidate(BeanDefinitionHolder bdHolder, DependencyDescriptor descriptor) {
@@ -41,6 +49,11 @@ public class SimpleAutowireCandidateResolver implements AutowireCandidateResolve
 	}
 
 	@Override
+	public boolean hasQualifier(DependencyDescriptor descriptor) {
+		return false;
+	}
+
+	@Override
 	@Nullable
 	public Object getSuggestedValue(DependencyDescriptor descriptor) {
 		return null;
@@ -50,6 +63,15 @@ public class SimpleAutowireCandidateResolver implements AutowireCandidateResolve
 	@Nullable
 	public Object getLazyResolutionProxyIfNecessary(DependencyDescriptor descriptor, @Nullable String beanName) {
 		return null;
+	}
+
+	/**
+	 * This implementation returns {@code this} as-is.
+	 * @see #INSTANCE
+	 */
+	@Override
+	public AutowireCandidateResolver cloneIfNecessary() {
+		return this;
 	}
 
 }

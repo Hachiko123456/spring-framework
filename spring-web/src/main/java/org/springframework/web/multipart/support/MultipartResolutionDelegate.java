@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2018 the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ package org.springframework.web.multipart.support;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.Part;
 
@@ -38,12 +39,16 @@ import org.springframework.web.util.WebUtils;
  * @author Juergen Hoeller
  * @since 4.3
  */
-public abstract class MultipartResolutionDelegate {
+public final class MultipartResolutionDelegate {
 
 	/**
 	 * Indicates an unresolvable value.
 	 */
 	public static final Object UNRESOLVABLE = new Object();
+
+
+	private MultipartResolutionDelegate() {
+	}
 
 
 	@Nullable
@@ -94,37 +99,53 @@ public abstract class MultipartResolutionDelegate {
 		boolean isMultipart = (multipartRequest != null || isMultipartContent(request));
 
 		if (MultipartFile.class == parameter.getNestedParameterType()) {
-			if (multipartRequest == null && isMultipart) {
-				multipartRequest = new StandardMultipartHttpServletRequest(request);
-			}
-			return (multipartRequest != null ? multipartRequest.getFile(name) : null);
-		}
-		else if (isMultipartFileCollection(parameter)) {
-			if (multipartRequest == null && isMultipart) {
-				multipartRequest = new StandardMultipartHttpServletRequest(request);
-			}
-			return (multipartRequest != null ? multipartRequest.getFiles(name) : null);
-		}
-		else if (isMultipartFileArray(parameter)) {
-			if (multipartRequest == null && isMultipart) {
-				multipartRequest = new StandardMultipartHttpServletRequest(request);
-			}
-			if (multipartRequest != null) {
-				List<MultipartFile> multipartFiles = multipartRequest.getFiles(name);
-				return multipartFiles.toArray(new MultipartFile[0]);
-			}
-			else {
+			if (!isMultipart) {
 				return null;
 			}
+			if (multipartRequest == null) {
+				multipartRequest = new StandardMultipartHttpServletRequest(request);
+			}
+			return multipartRequest.getFile(name);
+		}
+		else if (isMultipartFileCollection(parameter)) {
+			if (!isMultipart) {
+				return null;
+			}
+			if (multipartRequest == null) {
+				multipartRequest = new StandardMultipartHttpServletRequest(request);
+			}
+			List<MultipartFile> files = multipartRequest.getFiles(name);
+			return (!files.isEmpty() ? files : null);
+		}
+		else if (isMultipartFileArray(parameter)) {
+			if (!isMultipart) {
+				return null;
+			}
+			if (multipartRequest == null) {
+				multipartRequest = new StandardMultipartHttpServletRequest(request);
+			}
+			List<MultipartFile> files = multipartRequest.getFiles(name);
+			return (!files.isEmpty() ? files.toArray(new MultipartFile[0]) : null);
 		}
 		else if (Part.class == parameter.getNestedParameterType()) {
-			return (isMultipart ? request.getPart(name): null);
+			if (!isMultipart) {
+				return null;
+			}
+			return request.getPart(name);
 		}
 		else if (isPartCollection(parameter)) {
-			return (isMultipart ? resolvePartList(request, name) : null);
+			if (!isMultipart) {
+				return null;
+			}
+			List<Part> parts = resolvePartList(request, name);
+			return (!parts.isEmpty() ? parts : null);
 		}
 		else if (isPartArray(parameter)) {
-			return (isMultipart ? resolvePartList(request, name).toArray(new Part[0]) : null);
+			if (!isMultipart) {
+				return null;
+			}
+			List<Part> parts = resolvePartList(request, name);
+			return (!parts.isEmpty() ? parts.toArray(new Part[0]) : null);
 		}
 		else {
 			return UNRESOLVABLE;

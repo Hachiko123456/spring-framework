@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2018 the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,9 +20,7 @@ import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,7 +29,9 @@ import java.util.stream.Collectors;
 import org.apache.tomcat.util.buf.MessageBytes;
 import org.apache.tomcat.util.http.MimeHeaders;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.lang.Nullable;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.MultiValueMap;
 
 /**
@@ -82,7 +82,7 @@ class TomcatHeadersAdapter implements MultiValueMap<String, String> {
 
 	@Override
 	public Map<String, String> toSingleValueMap() {
-		Map<String, String> singleValueMap = new LinkedHashMap<>(this.headers.size());
+		Map<String, String> singleValueMap = CollectionUtils.newLinkedHashMap(this.headers.size());
 		this.keySet().forEach(key -> singleValueMap.put(key, getFirst(key)));
 		return singleValueMap;
 	}
@@ -166,12 +166,7 @@ class TomcatHeadersAdapter implements MultiValueMap<String, String> {
 
 	@Override
 	public Set<String> keySet() {
-		Set<String> result = new HashSet<>(8);
-		Enumeration<String> names = this.headers.names();
-		while (names.hasMoreElements()) {
-			result.add(names.nextElement());
-		}
-		return result;
+		return new HeaderNames();
 	}
 
 	@Override
@@ -192,6 +187,12 @@ class TomcatHeadersAdapter implements MultiValueMap<String, String> {
 				return headers.size();
 			}
 		};
+	}
+
+
+	@Override
+	public String toString() {
+		return HttpHeaders.formatHeaders(this);
 	}
 
 
@@ -237,6 +238,61 @@ class TomcatHeadersAdapter implements MultiValueMap<String, String> {
 			headers.removeHeader(this.key);
 			addAll(this.key, value);
 			return previous;
+		}
+	}
+
+
+	private class HeaderNames extends AbstractSet<String> {
+
+		@Override
+		public Iterator<String> iterator() {
+			return new HeaderNamesIterator(headers.names());
+		}
+
+		@Override
+		public int size() {
+			Enumeration<String> names = headers.names();
+			int size = 0;
+			while (names.hasMoreElements()) {
+				names.nextElement();
+				size++;
+			}
+			return size;
+		}
+	}
+
+	private final class HeaderNamesIterator implements Iterator<String> {
+
+		private final Enumeration<String> enumeration;
+
+		@Nullable
+		private String currentName;
+
+		private HeaderNamesIterator(Enumeration<String> enumeration) {
+			this.enumeration = enumeration;
+		}
+
+		@Override
+		public boolean hasNext() {
+			return this.enumeration.hasMoreElements();
+		}
+
+		@Override
+		public String next() {
+			this.currentName = this.enumeration.nextElement();
+			return this.currentName;
+		}
+
+		@Override
+		public void remove() {
+			if (this.currentName == null) {
+				throw new IllegalStateException("No current Header in iterator");
+			}
+			int index = headers.findHeader(this.currentName, 0);
+			if (index == -1) {
+				throw new IllegalStateException("Header not present: " + this.currentName);
+			}
+			headers.removeHeader(index);
 		}
 	}
 

@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,6 +31,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
 /**
+ * 根据范型类型进行匹配
  * Basic {@link AutowireCandidateResolver} that performs a full generic type
  * match with the candidate's type if the dependency is declared as a generic type
  * (e.g. Repository&lt;Customer&gt;).
@@ -43,7 +44,7 @@ import org.springframework.util.ClassUtils;
  * @since 4.0
  */
 public class GenericTypeAwareAutowireCandidateResolver extends SimpleAutowireCandidateResolver
-		implements BeanFactoryAware {
+		implements BeanFactoryAware, Cloneable {
 
 	@Nullable
 	private BeanFactory beanFactory;
@@ -86,6 +87,7 @@ public class GenericTypeAwareAutowireCandidateResolver extends SimpleAutowireCan
 		if (bdHolder.getBeanDefinition() instanceof RootBeanDefinition) {
 			rbd = (RootBeanDefinition) bdHolder.getBeanDefinition();
 		}
+		// 查看工厂方法解析的类型是否和dependencyType相匹配
 		if (rbd != null) {
 			targetType = rbd.targetType;
 			if (targetType == null) {
@@ -104,6 +106,7 @@ public class GenericTypeAwareAutowireCandidateResolver extends SimpleAutowireCan
 			}
 		}
 
+		// 非工厂方法创建，通过beanFactory#getType或者AbstractBeanDefinition#getBeanClass获取Class类型
 		if (targetType == null) {
 			// Regular case: straight bean instance, with BeanFactory available.
 			if (this.beanFactory != null) {
@@ -175,6 +178,23 @@ public class GenericTypeAwareAutowireCandidateResolver extends SimpleAutowireCan
 			}
 		}
 		return null;
+	}
+
+
+	/**
+	 * This implementation clones all instance fields through standard
+	 * {@link Cloneable} support, allowing for subsequent reconfiguration
+	 * of the cloned instance through a fresh {@link #setBeanFactory} call.
+	 * @see #clone()
+	 */
+	@Override
+	public AutowireCandidateResolver cloneIfNecessary() {
+		try {
+			return (AutowireCandidateResolver) clone();
+		}
+		catch (CloneNotSupportedException ex) {
+			throw new IllegalStateException(ex);
+		}
 	}
 
 }

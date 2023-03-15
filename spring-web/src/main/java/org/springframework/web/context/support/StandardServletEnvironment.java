@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2018 the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -52,6 +52,22 @@ public class StandardServletEnvironment extends StandardEnvironment implements C
 
 	/** JNDI property source name: {@value}. */
 	public static final String JNDI_PROPERTY_SOURCE_NAME = "jndiProperties";
+
+
+	/**
+	 * Create a new {@code StandardServletEnvironment} instance.
+	 */
+	public StandardServletEnvironment() {
+	}
+
+	/**
+	 * Create a new {@code StandardServletEnvironment} instance with a specific {@link MutablePropertySources} instance.
+	 * @param propertySources property sources to use
+	 * @since 5.3.4
+	 */
+	protected StandardServletEnvironment(MutablePropertySources propertySources) {
+		super(propertySources);
+	}
 
 
 	/**
